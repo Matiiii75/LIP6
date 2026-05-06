@@ -27,6 +27,8 @@ struct KeyEqual {
 
 struct State_graph {
 
+    int s, t; // pour mémoriser les sommets source et puit qu'on a ajouté 
+
     const Data& data; // reférence constante vers un objet data passé au constructeur (évite copie)
 
     std::vector<std::vector<int>> ID_to_cands; // associe à chaque ID son ensemble candidat 
@@ -42,10 +44,8 @@ struct State_graph {
 
     std::vector<int> weights; // les poids de chaque ID de candidats (par index)
 
-    std::unordered_map<int,int> preds_SG; // pr retenir un pred de chaque sommet de SG (calcul du poids + rapide)
 
-
-    State_graph(const Data& _data, int s); 
+    State_graph(const Data& _data, int _s, int _t); 
 
     /**
      * @brief vérifie si un ensemble candidat est déja dans SG 
@@ -59,11 +59,14 @@ struct State_graph {
 
     /**
      * @brief calcule le poids des arcs sortant de l'ensemble candidats C 
+     *  par récurrence avec le poids d'un prédécesseur K 
      * @param C_ID ID de l'ensemble candidat dont on calcule le poids des arcs sortant
+     * @param K_ID un prédécesseur de C_ID
+     * @param c le candidat de K qu'on a ajouté à S(C)
      * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
      * @return le poids 
      */
-    int compute_weight_C(int C_ID, const std::vector<int>& cut_set) const ; 
+    int compute_weight_C(int C_ID, int K_ID, int c, const std::vector<int>& cut_set) const ; 
 
 
     /**
@@ -118,6 +121,10 @@ struct State_graph {
 
     // méthode d'affichage de SG avec les relations entre ensembles 
     void display_SG_detail() const; 
+
+
+    // afficher les poids de chaque ensemble candidat
+    void display_weights() const; 
 
 }; 
 

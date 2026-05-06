@@ -1,9 +1,11 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int s) : data(_data), SG(_data, s)
+Master::Master(const Data& _data, int _s, int _t) : data(_data), SG(_data, _s, _t)
 {
     L.push(0); // ajouter l'ID du premier candidat  
+    best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
+    pred_in_pcc.push_back({-1,-1}); 
 }
 
 
@@ -32,7 +34,7 @@ std::vector<int> Master::compute_cut_set(const std::vector<int>& cand) const {
     return cut_set; 
 }
 
-// algo 1 
+
 void Master::build_SG() {
 
     while(!L.empty()) 
@@ -43,11 +45,6 @@ void Master::build_SG() {
 
         std::vector<int> C = SG.get_cand(C_ID); 
         std::vector<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
-
-        if(C_ID != 0) { // si l'ID est 0 -> alors c'est s et on a déjà set le poids a 0
-            int C_weight = SG.compute_weight_C(C_ID, cut_set); // on récup le poids de C
-            SG.set_weight(C_ID, C_weight); // ajout du poids 
-        } 
 
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
@@ -64,9 +61,9 @@ void Master::build_SG() {
             auto it = std::upper_bound(extended_cut_set.begin(), extended_cut_set.end(), curr_c); 
             extended_cut_set.insert(it, curr_c); 
 
-            for(const int u : data.dag[curr_c]) { // (l.8)
+            for(const int u : data.dag[curr_c]) { // (l.7)
 
-                if(is_included(data.reverse_dag[u], extended_cut_set))
+                if(is_included(data.reverse_dag[u], extended_cut_set, -1))
                     C2.push_back(u); 
 
             }
@@ -78,15 +75,26 @@ void Master::build_SG() {
             keyHash C2_hash = compute_cand_hash(C2, data.node_to_hash); 
             int C2_ID = SG.is_cand_in_SG(C2, C2_hash); 
 
-            if(C2_ID == -1) { // (l.11)
+            if(C2_ID == -1) { // (l.10) (si il vaut -1 c'est qu'on a pas trouvé d'ID pr ce hash)
                 
                 SG.add_cand_to_SG(C2, C2_hash); 
                 C2_ID = (int)SG.ID_to_cands.size()-1; // on vient de l'ajouter, son ID est le dernier index 
                 L.push(C2_ID); // ajout à FIFO
+                int C2_weight = SG.compute_weight_C(C2_ID, C_ID, curr_c, extended_cut_set); // extended_cut_set est le cut-set de C2 
+                SG.set_weight(C2_ID, C2_weight); // on calcule le poids de C2 
+                best_dist.push_back(std::numeric_limits<int>::max()); // inf par défaut 
 
             }
 
             SG.add_arc_from_C1_to_C2(C_ID, C2_ID); // ajoute l'arc 
+            
+            int dist_from_C = best_dist[C_ID] + SG.weights[C2_ID]; 
+            if(best_dist[C2_ID] > dist_from_C) { // voir si on améliore le pcc jusqu'à C2 en passant par C 
+                
+                best_dist[C2_ID] = dist_from_C; 
+                pred_in_pcc.push_back({C_ID, curr_c}); // mémoriser d'où on vient et qui était le candidat 
+
+            }
 
         }
 
@@ -94,6 +102,85 @@ void Master::build_SG() {
 
 }
 
+
+std::vector<int> Master::rebuild_opt_order() const {
+
+    std::vector<int> ordre_topo; 
+    int curr_node = (int)pred_in_pcc.size() - 1; // on récup le dernier ens candidat ( {t} )
+
+    while(curr_node != 0) {
+
+        ordre_topo.push_back(pred_in_pcc[curr_node].second); 
+        curr_node = pred_in_pcc[curr_node].first; 
+
+
+    }
+
+    std::reverse(ordre_topo.begin(), ordre_topo.end()); 
+    return ordre_topo; 
+}
+
+
+bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) const {
+
+
+    // commencer par vérifier que c'est bien un ordre topologique valide
+    // ie : vérifier que pour toute paire (u,v) suivant l'ordre topo, 
+    // (v,u) notin A 
+
+    for(int i = 0; i < (int)ordre_topo.size()-1; ++i) {
+        for(int j = i+1; j < (int)ordre_topo.size(); ++j) {
+
+            int node1 = ordre_topo[i]; // 1er dans l'ordre
+            int node2 = ordre_topo[j]; // 2nd
+
+            for(int neigh : data.dag[node2])
+                if(neigh == node1) {
+                    std::cout << node1 << "est un successeur direct de "
+                        << node2 << " dans le dag initial " << std::endl;
+                    return false; 
+                } 
+
+        }
+    }
+
+    // calculer la valeur de l'ordre topologique et regarder qu'on obtient bien la même 
+
+    int obj_val = 0; // pr stocker la valeur objective 
+
+    for(int i = 0; i < (int)ordre_topo.size()-1; ++i) { // pour chaque ordre 
+        int valeur_ordre_i = 0;
+        for(int j = 0; j <= i; ++j) { // pr chq sommet dans la coupe
+            
+            bool go_next_in_coupe = false;
+            int node_in_coupe = ordre_topo[j]; // stocke le noeud ds la coupe
+            for(int k = i+1; k < (int)ordre_topo.size(); ++k) { // pr chq sommet hors coupe
+                
+                int node_hors_coupe = ordre_topo[k]; // noeud hors coupe
+                for(int neigh : data.dag[node_in_coupe]) {
+                    if(neigh == node_hors_coupe) {
+                        ++valeur_ordre_i; // on a trouvé un succ hors coupe -> ++
+                        go_next_in_coupe = true; 
+                        break; // aller au prochain noeud in-coupe
+                    }
+                }
+                if(go_next_in_coupe) break; 
+            }
+        }
+        obj_val += valeur_ordre_i; 
+    }
+
+    if(obj_val != val_found) { // check la valeur obj 
+        std::cout << "Erreur dans la valeur calculée : " << std::endl;
+        std::cout << "Valeur trouvée : " << val_found << std::endl;
+        std::cout << "Valeur correcte : " << obj_val << std::endl;
+        return false; 
+    } else {
+        std::cout << "Valeur calculée OK !" << std::endl;
+    }
+
+    return true; 
+}
 
 
 

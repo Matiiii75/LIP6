@@ -65,7 +65,7 @@ Data::Data(const std::string& file) {
 }
 
 
-void Data::compute_transitive_closure() {
+void Data::compute_transitive_closure() { 
 
     std::vector<std::vector<bool>> trans_closure(dag_size, 
         std::vector<bool>(dag_size,0)); // init trans closure tt a 0

@@ -9,6 +9,7 @@
 #include <fstream> 
 #include <algorithm> 
 #include <queue>
+#include <cassert>
 
 using Dag = std::vector<std::vector<int>>;
 

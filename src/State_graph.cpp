@@ -1,7 +1,7 @@
 #include "State_graph.hpp"
 
 
-State_graph::State_graph(const Data& _data, int s) : data(_data) // constructeur 
+State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s), t(_t)// constructeur 
 {
 
     // ajouter le premier sommet à SG, 
@@ -46,26 +46,28 @@ int State_graph::is_cand_in_SG(const std::vector<int>& cand, const keyHash& cand
 }
 
 
-int State_graph::compute_weight_C(int C_ID, const std::vector<int>& cut_set) const {
+int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::vector<int>& cut_set) const {
 
-    int K_ID = get_pred_C(C_ID); // on récupère le pred
     int K_weight = weights.at(K_ID); 
     // le ".at" lève une erreur si l'index K_ID n'existait pas (+ lent mais + safe)
     // on le garde pr la version expérimentale. 
+
+    assert(C_ID >= 0 && C_ID < (int)ID_to_cands.size()); // précautions anti dépassement 
+    assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
 
     // on fait des alias sur les deux ensembles candidats 
     const std::vector<int>& K = ID_to_cands[K_ID]; 
     const std::vector<int>& C = ID_to_cands[C_ID]; 
 
     int C_weight = K_weight; // (l.3 - algo 2)
-    int gamma = find_gamma(K, C); // récup gamma 
 
-    for(int u : data.reverse_dag[gamma]) { // pr tout pred de gamma
-        if(is_included(data.dag[u], cut_set))
+    for(int u : data.reverse_dag[c]) { // pr tout pred de c
+        if(u == s) continue; // si c'est la source, on ignore 
+        if(is_included(data.dag[u], cut_set, t))
             --C_weight; 
     }
 
-    if(is_disjoint(data.reverse_dag[gamma], C, data.TC)) { // (l.8,9 - algo 2)
+    if(is_disjoint(data.dag[c], t,  C, data.TC)) { // (l.7,8 - algo 2)
         ++C_weight; 
     }
 
@@ -81,22 +83,17 @@ void State_graph::add_cand_to_SG(const std::vector<int>& cand, const keyHash& ca
     SG.push_back({}); // initialiser un vecteur vide pour l'index "cand_ID"
     weights.push_back(-1); // on ajoute le poids -1 par défaut à l'ID 
 
-}
+    assert(ID_to_cands.size() == SG.size()); // précautions anti dépassement 
+    assert(ID_to_cands.size() == weights.size()); 
 
+}
 
 void State_graph::add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID) {
+
+    assert(cand1_ID >= 0 && cand1_ID < (int)SG.size()); 
+    assert(cand2_ID >= 0 && cand2_ID < (int)SG.size()); 
+
     SG[cand1_ID].push_back(cand2_ID); 
-    preds_SG[cand2_ID] = cand1_ID; // sauvegarder le pred de cand2_ID 
-}
-
-
-int State_graph::get_pred_C(int C_ID) const {
-    
-    auto it = preds_SG.find(C_ID); // calcul itérateur pour pas le faire deux fois avec un count 
-    if(it == preds_SG.end()) // si pas de pred enregistré 
-        throw std::runtime_error("Erreur dans State_graph (get_pred_C) : pas de pred mémorisé"); 
-    
-    return it->second; 
 }
 
 
@@ -158,4 +155,21 @@ void State_graph::display_SG_detail() const {
     }
 }
 
+
+void State_graph::display_weights() const {
+
+    std::cout << "--- AFFICHAGE POIDS DES ENSEMBLES CANDIDATS ---" << std::endl;
+
+    for(int i = 0; i < (int)SG.size(); ++i) {
+
+        std::vector<int> cand = get_cand(i); // récup candidats ID = i
+        
+        std::cout << "{ "; // affichage candidats 
+        for(int u : cand) 
+            std::cout << u << " "; 
+        std::cout << "} : " << weights[i] << std::endl; 
+
+    }
+
+}
 

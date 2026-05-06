@@ -1,6 +1,6 @@
 # 1. Variables de configuration
 CXX = clang++
-CXXFLAGS = # -Wall -Wextra -std=c++17
+CXXFLAGS = # -fsanitize=address -g -Wall -Wextra -std=c++17
 NAME = prog
 
 # 2. Liste des fichiers (À METTRE À JOUR QUAND TU AJOUTES UN FICHIER)

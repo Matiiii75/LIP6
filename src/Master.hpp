@@ -13,6 +13,11 @@ struct Master {
 
     std::queue<int> L; // liste FIFO pour stocker les ensembles candidats à traiter
 
+    std::vector<int> best_dist; // pr stocker les pcc jusqu'à l'ID défini par l'index du vecteur
+
+    // pr stocker les preds dans le pcc 
+    // pred_in_pcc[i] = {pred(i),candidat ajouté}
+    std::vector<std::pair<int,int>> pred_in_pcc; 
 
     /**
      * @brief constructeur de Master : établit une ref const vers data, 
@@ -20,7 +25,7 @@ struct Master {
      * @param _data Les données du pb pré-calculées 
      * @param s le sommet de degré entrant 0 du dag initial
      */
-    Master(const Data& _data, int s);
+    Master(const Data& _data, int _s, int _t);
 
     /**
      * @brief calcul le cut set associé à un ensemble candidat
@@ -34,6 +39,18 @@ struct Master {
      * @brief construit intégralement le graphe d'états SG 
      */
     void build_SG();
+
+
+    /**
+     * @brief reconstruit l'ordre topologique optimal à partir de pred_in_pcc
+     */
+    std::vector<int> rebuild_opt_order() const; 
+
+
+    /**
+     * @brief vérifie la validité de l'ordre trouvé
+     */
+    bool checker_DSC(const std::vector<int>& ordre_topo, int val_found) const; 
 
 }; 
 
