@@ -58,6 +58,12 @@ struct Data {
     std::vector<std::vector<bool>> TC; // transitive closure du dag initial
     std::vector<keyHash> node_to_hash; // à chaque noeud du dag, on associe un hash 
 
+    /**
+     * @brief constructeur de Data : initialise les données du pb, 
+     * comme dag, reverse_dag, transitive closure etc.. à partir d'un instance 
+     * @param file instance du dag initial
+     * @warning ATTENTION : l'ordre des sommets dans dag et reverser_dag doit etre CROISSANT !! 
+     */
     Data(const std::string& file); // constructeur 
 
     void compute_transitive_closure(); // calcule la transitive closure (ON PEUT AMELIORER)
