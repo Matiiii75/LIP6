@@ -39,7 +39,7 @@ void Master::build_SG() {
 
     while(!L.empty()) 
     {  
-        
+
         int C_ID = L.front(); // on récupère l'ID de l'ens. cand. devans la FIFO
         L.pop(); // on l'efface 
 
@@ -83,6 +83,7 @@ void Master::build_SG() {
                 int C2_weight = SG.compute_weight_C(C2_ID, C_ID, curr_c, extended_cut_set); // extended_cut_set est le cut-set de C2 
                 SG.set_weight(C2_ID, C2_weight); // on calcule le poids de C2 
                 best_dist.push_back(std::numeric_limits<int>::max()); // inf par défaut 
+                pred_in_pcc.push_back({-1,-1}); // ajout d'un sommet defaut pour garder pred_in_pcc bien indéxé 
 
             }
 
@@ -92,7 +93,7 @@ void Master::build_SG() {
             if(best_dist[C2_ID] > dist_from_C) { // voir si on améliore le pcc jusqu'à C2 en passant par C 
                 
                 best_dist[C2_ID] = dist_from_C; 
-                pred_in_pcc.push_back({C_ID, curr_c}); // mémoriser d'où on vient et qui était le candidat 
+                pred_in_pcc[C2_ID] = {C_ID, curr_c}; // retenir d'où on vient  
 
             }
 
@@ -181,6 +182,8 @@ bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) cons
 
     return true; 
 }
+
+
 
 
 

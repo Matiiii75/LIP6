@@ -9,10 +9,7 @@ State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s)
     // (l.1 - algo 1)
 
     std::vector<int> first_cand; // ALLOUER K D'ESPACE MAX ?? 
-    for(const int i : data.dag[s]) // calcul du premier sommet de SG 
-        first_cand.push_back(i); 
-    
-    increase_sort_vector(first_cand); // tri ordre croissant 
+    first_cand = compute_first_cand();  
     
     keyHash first_cand_hash; // calculer le hash de first_cand 
     first_cand_hash = compute_cand_hash(first_cand, data.node_to_hash); 
@@ -26,6 +23,28 @@ State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s)
     add_cand_to_SG(first_cand, first_cand_hash); 
     weights[0] = 0; // le poids de tt arc sortant vaut 0
 
+}
+
+
+std::vector<int> State_graph::compute_first_cand() const {
+
+    std::vector<int> first_cand; 
+    for(const int succ_s : data.dag[s]) { // pr chq successeur direct de s 
+        bool succ_ok = true; 
+        for(int pred : data.reverse_dag[succ_s]) { 
+         
+            if(pred != s) { // si ce successeur a un autre pred direct que s 
+                succ_ok = false; // -> il ne peut pas être un candidat !!
+                break; 
+            }
+
+        }
+        if(succ_ok) 
+            first_cand.push_back(succ_s); // on l'ajoute 
+    }
+
+    increase_sort_vector(first_cand); 
+    return first_cand; 
 }
 
 

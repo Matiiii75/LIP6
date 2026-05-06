@@ -48,6 +48,15 @@ struct State_graph {
     State_graph(const Data& _data, int _s, int _t); 
 
     /**
+     * @brief calcule le premier ensemble candidat
+     * @note il faut trouver tous les successeurs directs de s qui
+     *  n'ont que s en prédécesseur direct
+     * @warning s'occupe du tri de first_cand en interne 
+     */
+    std::vector<int> compute_first_cand() const; 
+
+
+    /**
      * @brief vérifie si un ensemble candidat est déja dans SG 
      * @param cand ensemble candidat à vérifier 
      * @param cand_hash le hash de l'ensemble candidat (pré-calculé)
