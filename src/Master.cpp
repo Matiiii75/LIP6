@@ -95,27 +95,6 @@ void Master::build_SG() {
 }
 
 
-std::vector<int> Master::find_topological_order() const {
-
-    std::vector<int>  topo_order; 
-    topo_order.reserve((int)SG.SG.size()); // on alloue la place pour nb_nodes de SG
-
-    // calcul des in-degrees
-    std::unordered_map<int,int> in_degrees; 
-
-}
-
-
-std::vector<int> Master::solve(int& value) const {
-
-    std::vector<int> optimal_order; 
-    optimal_order.reserve(data.dag_size); // on peut lui réserver le nombre de sommets de dag
-
-
-
-}
-
-
 
 
 

@@ -34,16 +34,6 @@ struct Master {
      * @brief construit intégralement le graphe d'états SG 
      */
     void build_SG();
-    
-    
-    /**
-     * @brief cherche un ordre topologique sur les sommets de SG en vue 
-     *  de résoudre un probleme de pcc (algo de bellman
-     */
-    std::vector<int> find_topological_order() const; 
-
-
-    std::vector<int> solve(int& value) const; 
 
 }; 
 

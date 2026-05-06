@@ -8,7 +8,6 @@ int main(int argc, char* argv[]) {
     Master prog(data, 0); 
     prog.build_SG(); 
     
-    prog.SG.display_SG(); 
     prog.SG.display_SG_detail(); 
 
     return 0; 
