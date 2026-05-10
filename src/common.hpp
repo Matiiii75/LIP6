@@ -62,4 +62,6 @@ void display_vec(const std::vector<int>& v);
 void display_FIFO(std::queue<int> Q); 
 
 
+// fonction qui tire un entier aléatoire dans [a,b]
+int random_int(int a, int b, std::mt19937& gen); 
 

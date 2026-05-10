@@ -8,7 +8,8 @@ SRC = main.cpp \
       common.cpp \
 	  Master.cpp \
 	  State_graph.cpp \
-	  Data.cpp 
+	  Data.cpp \
+	  Heuristics.cpp
 
 # 3. Transformation des .cpp en .o (fichiers objets)
 OBJ = $(SRC:.cpp=.o)

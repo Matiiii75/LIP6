@@ -119,3 +119,12 @@ void display_FIFO(std::queue<int> Q)
 }
 
 
+int random_int(int a, int b, std::mt19937& gen) 
+{
+    std::uniform_int_distribution<> distrib(a,b); 
+    return distrib(gen); 
+}
+
+
+
+

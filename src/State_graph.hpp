@@ -103,7 +103,7 @@ struct State_graph {
      * @param C_ID ID de C, l'ensemble candidat dont on cherche un predecesseur dans SG
      * @return ID du predecesseur de C_ID dans SG
      */
-    int get_pred_C(int C_ID) const; 
+    int get_pred_C(int C_ID) const;     
 
 
     /**
