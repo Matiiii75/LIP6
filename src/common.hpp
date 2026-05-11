@@ -4,7 +4,7 @@
 
 
 /**
- * @brief fonction qui teste l'incusion d'un vecteur dans un autre
+ * @brief fonction qui teste l'incusion de v1 dans v2 - {t} (car t compte pas dans l'objectif)
  * @param v1 le vecteur qui est inclus 
  * @param v2 le vecteur qui contient
  * @param t le noeud puit qu'on ne considère pas dans le calcul

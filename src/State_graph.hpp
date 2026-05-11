@@ -95,15 +95,7 @@ struct State_graph {
      * @param weight le poids de l'arc 
      * @warning On doit avoir au préalable vérifié que cand1_ID et cand2_ID sont bien dans SG et ont bien le bon ID associé 
      */
-    void add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID); 
-
-
-    /**
-     * @brief trouve un pred de C dans SG
-     * @param C_ID ID de C, l'ensemble candidat dont on cherche un predecesseur dans SG
-     * @return ID du predecesseur de C_ID dans SG
-     */
-    int get_pred_C(int C_ID) const;     
+    void add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID);   
 
 
     /**

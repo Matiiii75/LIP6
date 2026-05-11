@@ -4,7 +4,6 @@
 bool is_disjoint(const std::vector<int>& succ_gamma, int t, 
     const std::vector<int>& C, const std::vector<std::vector<bool>>& TC) 
 { 
-
     for(int u : succ_gamma) { // pr chaque succ de gamma 
         if(u == t) continue; // si c'est le puit -> ignorer 
         for(int v : C) { // pr chaque candidat 
