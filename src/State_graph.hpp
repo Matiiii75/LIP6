@@ -75,7 +75,7 @@ struct State_graph {
      * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
      * @return le poids 
      */
-    int compute_weight_C(int C_ID, int K_ID, int c, const std::vector<int>& cut_set) const ; 
+    int compute_weight_C(int C_ID, int K_ID, int c, const std::unordered_set<int>& cut_set) const ; 
 
 
     /**

@@ -30,9 +30,9 @@ struct Master {
     /**
      * @brief calcul le cut set associé à un ensemble candidat
      * @param cand candidat pour lequel on recherche le cut set 
-     * @return vecteur contenant le cut set 
+     * @return unordered_set contenant le cut set 
      */
-    std::vector<int> compute_cut_set(const std::vector<int>& cand) const; 
+    std::unordered_set<int> compute_cut_set(const std::vector<int>& cand) const; 
 
 
     /**

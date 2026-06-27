@@ -8,7 +8,7 @@ bool keyHash::operator==(const keyHash& other) const {
 }
 
 keyHash keyHash::operator^(const keyHash& other) const {
-    keyHash nouveau; 
+    keyHash nouveau;
     nouveau.l = l ^ other.l; 
     nouveau.r = r ^ other.r; 
     return nouveau;
@@ -18,8 +18,6 @@ std::ostream& keyHash::operator<<(std::ostream& os) const {
     os << l << " " << r; 
     return os; 
 }
-
-/* FIN PARTIE KEYHASH CANDIDATS */
 
 
 keyHash randomGenerator(std::mt19937_64& moteur) {
@@ -35,6 +33,21 @@ keyHash randomGenerator(std::mt19937_64& moteur) {
     return nouveau; 
 }
 
+
+keyHash compute_cand_hash(const std::vector<int>& cand, const std::vector<keyHash>& node_to_hash) {
+
+    keyHash base; 
+    base.l = 0; // on créer un hash vallant 0 au début
+    base.r = 0; 
+
+    for(const int c : cand) { // on xor tous les candidats entre eux 
+        base = base ^ node_to_hash[c]; 
+    }
+
+    return base; // a la fin, base vaut le xor de tous les candidats 
+}
+
+/* FIN PARTIE KEYHASH CANDIDATS */
 
 /* DÉBUT PARTIE DATA */
 

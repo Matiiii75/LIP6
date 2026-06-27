@@ -1,7 +1,7 @@
 #include "State_graph.hpp"
 
 
-State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s), t(_t)// constructeur 
+State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s), t(_t) // constructeur 
 {
 
     // ajouter le premier sommet à SG, 
@@ -65,7 +65,7 @@ int State_graph::is_cand_in_SG(const std::vector<int>& cand, const keyHash& cand
 }
 
 
-int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::vector<int>& cut_set) const {
+int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::unordered_set<int>& cut_set) const {
 
     int K_weight = weights.at(K_ID); 
     // le ".at" lève une erreur si l'index K_ID n'existait pas (+ lent mais + safe)
@@ -86,7 +86,7 @@ int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::vector<i
             --C_weight; 
     }
 
-    if(is_disjoint(data.dag[c], t,  C, data.TC)) { // (l.7,8 - algo 2)
+    if(is_disjoint(data.dag[c], t, cut_set)) { // (l.7,8 - algo 2)
         ++C_weight; 
     }
 
@@ -106,6 +106,7 @@ void State_graph::add_cand_to_SG(const std::vector<int>& cand, const keyHash& ca
     assert(ID_to_cands.size() == weights.size()); 
 
 }
+
 
 void State_graph::add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID) {
 

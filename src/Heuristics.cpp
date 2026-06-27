@@ -6,7 +6,6 @@ Heuristics::Heuristics(const Data& _data) : data(_data)
     init_ordre_topo(); 
     compute_node_order_matrix();
     obj_val = compute_DSC_obj(); 
-    std::cout << "computed obj value : " << obj_val << std::endl; 
 }
 
 
@@ -249,8 +248,7 @@ void Heuristics::SAA_optimize(double temp, int iter_max) {
                 bs.found_move = true; 
                 bs.delta = delta; 
                 bs.indx_l = indx; 
-                bs.indx_r = indx+1;  
-    
+                bs.indx_r = indx+1;   
 
             } 
 

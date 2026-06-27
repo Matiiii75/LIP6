@@ -47,6 +47,16 @@ struct keyHash {
 keyHash randomGenerator(std::mt19937_64& moteur); 
 
 
+/**
+ * @brief calcule le hash d'un ensemble de candidats (noeud du graphe d'états)
+ * @param cand l'ensemble candidat 
+ * @param node_to_hash structure qui associé à chaque noeud du dag un hash 
+ * @return hash de l'ensemble candidats
+ */
+keyHash compute_cand_hash(const std::vector<int>& cand, const std::vector<keyHash>& node_to_hash); 
+
+
+
 struct Data {
 
     Dag dag; // dag initial
@@ -64,7 +74,7 @@ struct Data {
      * @param file instance du dag initial
      * @warning ATTENTION : l'ordre des sommets dans dag et reverser_dag doit etre CROISSANT !! 
      */
-    Data(const std::string& file); // constructeur 
+    Data(const std::string& file); 
 
     void compute_transitive_closure(); // calcule la transitive closure (ON PEUT AMELIORER)
     void compute_node_to_hash(); // calcule les hash de chaque noeud du dag 

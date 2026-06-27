@@ -29,6 +29,10 @@ struct Heuristics {
 
     std::vector<std::vector<int>> node_order_matrix; // matrice tq m[u][i] = nb de succ directs de u STRICTEMENT apres l'ordre i 
 
+    /**
+     * @brief constructeur : trouve un ordre topologique de départ, compute l'order matrix (MP dans le pseudo-code)
+     * @param _data : ce sont les données du problème stockées dans la classe Data
+     */
     Heuristics(const Data& _data); 
 
     /**
@@ -40,7 +44,7 @@ struct Heuristics {
 
 
     /**
-     * @brief calcule une matrice M telle que M[u][i] = nombre de succ directs de u strictement après l'ordre ie
+     * @brief calcule une matrice M telle que M[u][i] = nombre de succ directs de u strictement après l'ordre i
      */
     void compute_node_order_matrix(); 
 

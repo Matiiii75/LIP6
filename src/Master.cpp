@@ -9,9 +9,9 @@ Master::Master(const Data& _data, int _s, int _t) : data(_data), SG(_data, _s, _
 }
 
 
-std::vector<int> Master::compute_cut_set(const std::vector<int>& cand) const {
+std::unordered_set<int> Master::compute_cut_set(const std::vector<int>& cand) const {
 
-    std::vector<int> cut_set; // comme on connait k, on peut allouer a l'avance !!
+    std::unordered_set<int> cut_set; // comme on connait k, on peut allouer a l'avance !!
     
     // j'utilise un vecteur de bool où tout est faux au debut. 
     // on va parcourir les N_G^+(cand) et mettre vrai a l'indice de ceux qui y sont
@@ -28,7 +28,7 @@ std::vector<int> Master::compute_cut_set(const std::vector<int>& cand) const {
 
     for(int i = 0; i < data.dag_size; ++i) {
         if(is_in_cut_set[i] == false) 
-            cut_set.push_back(i); // si c'est faux, alors il est hors successeur, donc dans le cut set 
+            cut_set.insert(i); // si c'est faux, alors il est hors successeur, donc dans le cut set 
     }
 
     return cut_set; 
@@ -44,7 +44,7 @@ void Master::build_SG() {
         L.pop(); // on l'efface 
 
         std::vector<int> C = SG.get_cand(C_ID); 
-        std::vector<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
+        std::unordered_set<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
 
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
@@ -57,14 +57,12 @@ void Master::build_SG() {
 
             int curr_c = C[i]; // copie c 
 
-            std::vector<int> extended_cut_set = cut_set; // il faut étendre le cut set au noeud candidat 
-            auto it = std::upper_bound(extended_cut_set.begin(), extended_cut_set.end(), curr_c); 
-            extended_cut_set.insert(it, curr_c); 
+            cut_set.insert(curr_c); // on étend le cut set au noeud candidat 
 
-            for(const int u : data.dag[curr_c]) { // (l.7)
+            for(const int u : data.dag[curr_c]) { // (l.7) : pr chq succ u du candidat
 
-                if(is_included(data.reverse_dag[u], extended_cut_set, -1))
-                    C2.push_back(u); 
+                if(is_included(data.reverse_dag[u], cut_set, -1)) // si tt les pred de u sont dans cut-set
+                    C2.push_back(u); // -1 signifie qu'on regarde la simple inclusion de r-dag dans e-c-s 
 
             }
 
@@ -80,7 +78,7 @@ void Master::build_SG() {
                 SG.add_cand_to_SG(C2, C2_hash); 
                 C2_ID = (int)SG.ID_to_cands.size()-1; // on vient de l'ajouter, son ID est le dernier index 
                 L.push(C2_ID); // ajout à FIFO
-                int C2_weight = SG.compute_weight_C(C2_ID, C_ID, curr_c, extended_cut_set); // extended_cut_set est le cut-set de C2 
+                int C2_weight = SG.compute_weight_C(C2_ID, C_ID, curr_c, cut_set); // cut_set est le cut-set de C2 
                 SG.set_weight(C2_ID, C2_weight); // on calcule le poids de C2 
                 best_dist.push_back(std::numeric_limits<int>::max()); // inf par défaut 
                 pred_in_pcc.push_back({-1,-1}); // ajout d'un sommet defaut pour garder pred_in_pcc bien indéxé 
@@ -97,6 +95,9 @@ void Master::build_SG() {
 
             }
 
+            // on fini la boucle sur curr_c 
+            // -> on l'efface pour passer au prochain candidat 
+            cut_set.erase(curr_c); 
         }
 
     }

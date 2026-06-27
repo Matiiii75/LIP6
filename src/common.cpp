@@ -1,7 +1,7 @@
 #include "common.hpp"
 
 
-bool is_disjoint(const std::vector<int>& succ_gamma, int t, 
+bool is_disjointV2(const std::vector<int>& succ_gamma, int t, 
     const std::vector<int>& C, const std::vector<std::vector<bool>>& TC) 
 { 
     for(int u : succ_gamma) { // pr chaque succ de gamma 
@@ -16,8 +16,19 @@ bool is_disjoint(const std::vector<int>& succ_gamma, int t,
     return false; // si on arrive ici, tous les succ gamma sont dans S(C)
 }
 
+bool is_disjoint(const std::vector<int>& succ_gamma, int t, 
+    const std::unordered_set<int> cut_set) 
+{
+    for(int u : succ_gamma) {
+        if(u == t) continue; // puit -> ignorer 
+        if(cut_set.count(u) == 0)
+            return true; 
+    }
+    
+    return false; 
+}
 
-bool is_included(const std::vector<int>& v1, const std::vector<int>& v2, int t) {
+bool is_includedV2(const std::vector<int>& v1, const std::vector<int>& v2, int t) {
 
     if(v1.size() > v2.size())
         return false; 
@@ -26,9 +37,9 @@ bool is_included(const std::vector<int>& v1, const std::vector<int>& v2, int t) 
     int v2_size = (int)v2.size(); 
     int v1_size = (int)v1.size(); 
 
-    if(v1.back() == t) 
+    if(v1.back() == t) // on ignore le puit 
         --v1_size; 
-
+    
     for(int i = 0; i < v1_size; ++i) { // pr chq index de v1
 
         while(j < v2_size && v2[j] < v1[i]) 
@@ -40,10 +51,25 @@ bool is_included(const std::vector<int>& v1, const std::vector<int>& v2, int t) 
         
         ++j; // si le if d'avant s'est pas déclenché, on est dans le cas v1(i) = v2(j)
         // -> on continue 
-
+            
     }
 
     return true; 
+}
+
+
+bool is_included(const std::vector<int>& v1, const std::unordered_set<int>& v2, int t) {
+
+    int v1_size = (int)v1.size(); 
+
+    if(v1_size > 0 && v1.back() == t) // on ignore le puit 
+        --v1_size; 
+
+    for(int i = 0; i < v1_size; ++i) { // pr chq index de v1
+        if(v2.find(v1[i]) == v2.end()) return false; // si on le trouve pas dans v2  
+    }
+
+    return true; // si on arrive là c'est que tout élément de v1 est dans v2
 }
 
 
@@ -71,20 +97,6 @@ int find_gamma(const std::vector<int>& v1, const std::vector<int>& v2) {
         return v1[v2_size]; 
 
     return -1; // on a pas trouvé de gamma (devrait pas arriver !!) 
-}
-
-
-keyHash compute_cand_hash(const std::vector<int>& cand, const std::vector<keyHash>& node_to_hash) {
-
-    keyHash base; 
-    base.l = 0; // on créer un hash vallant 0 au début
-    base.r = 0; 
-
-    for(const int c : cand) { // on xor tous les candidats entre eux 
-        base = base ^ node_to_hash[c]; 
-    }
-
-    return base; // a la fin, base vaut le xor de tous les candidats 
 }
 
 
