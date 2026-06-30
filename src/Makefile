@@ -1,5 +1,5 @@
 # 1. Variables de configuration
-CXX = clang++
+CXX = g++
 CXXFLAGS = # -fsanitize=address -g -Wall -Wextra -std=c++17
 NAME = prog
 
