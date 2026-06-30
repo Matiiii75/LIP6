@@ -38,9 +38,11 @@ struct Heuristics {
     /**
      * @brief trouve un ordre topologique valide initial 
      * @return un vecteur où vec[i] = sommet en i-eme position dans l'ordre 
+     * @note renvoie une erreur si le graphe n'est pas un dag ou si l'ordre topologique retourné
+     * n'en est pas un pour quelconque raison 
      * @warning le dag donné doit avoir un unique sommet de degré entrant 0 (s)
      */
-    void init_ordre_topo(); // fonction qui trouve un ordre topologique dans le dag 
+    void init_ordre_topo(); 
 
 
     /**

@@ -115,7 +115,6 @@ std::vector<int> Master::rebuild_opt_order() const {
         ordre_topo.push_back(pred_in_pcc[curr_node].second); 
         curr_node = pred_in_pcc[curr_node].first; 
 
-
     }
 
     std::reverse(ordre_topo.begin(), ordre_topo.end()); 

@@ -5,6 +5,10 @@ int main(int argc, char* argv[]) {
 
     std::string file = argv[1]; 
     Data data(file); 
+
+    Heuristics h(data); // partie heuristique SAA 
+    h.SAA_optimize(2000, 500); 
+    std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
     
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     Master prog(data, 0, data.dag_size-1); 

@@ -4,12 +4,13 @@ CXXFLAGS = # -fsanitize=address -g -Wall -Wextra -std=c++17
 NAME = prog
 
 # 2. Liste des fichiers (À METTRE À JOUR QUAND TU AJOUTES UN FICHIER)
-SRC = main.cpp \
-      common.cpp \
+SRC = common.cpp \
 	  Master.cpp \
 	  State_graph.cpp \
 	  Data.cpp \
-	  Heuristics.cpp
+	  Heuristics.cpp \
+	  gen_graph.cpp \
+	  main.cpp
 
 # 3. Transformation des .cpp en .o (fichiers objets)
 OBJ = $(SRC:.cpp=.o)

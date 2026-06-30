@@ -64,6 +64,7 @@ struct Data {
 
     int dag_size; 
     int nb_arcs; 
+    int degenerascy; 
     
     std::vector<std::vector<bool>> TC; // transitive closure du dag initial
     std::vector<keyHash> node_to_hash; // à chaque noeud du dag, on associe un hash 

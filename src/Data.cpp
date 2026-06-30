@@ -58,7 +58,7 @@ Data::Data(const std::string& file) {
     if(!f.is_open()) 
         throw std::runtime_error("Couldn't open file " + file); 
     
-    f >> dag_size >> nb_arcs; 
+    f >> dag_size >> nb_arcs >> degenerascy; 
     
     dag.resize(dag_size);  
     reverse_dag.resize(dag_size); 

@@ -11,10 +11,10 @@ Heuristics::Heuristics(const Data& _data) : data(_data)
 
 void Heuristics::init_ordre_topo() {
 
-    ordre_to_node.reserve(data.dag_size);  
-    node_to_ordre.resize(data.dag_size); 
+    ordre_to_node.reserve(data.dag_size);  // associe à chq position son sommet 
+    node_to_ordre.resize(data.dag_size);   // associe à chq sommet sa position 
     
-    std::vector<int> in_degrees(data.dag_size, 0); 
+    std::vector<int> in_degrees(data.dag_size, 0); // degs entrants de chq sommet 
     
     for(int u = 0; u < data.dag_size; ++u) { // pr chq node du dag
         in_degrees[u] = (int)data.reverse_dag[u].size(); 
@@ -22,14 +22,14 @@ void Heuristics::init_ordre_topo() {
 
     std::queue<int> fifo_list; 
 
-    for(int u = 0; u < data.dag_size; ++u) { 
+    for(int u = 0; u < data.dag_size; ++u) { // pr chq sommet de degré 0 -> ajt a la fifo directement 
         if(in_degrees[u] == 0) {
             fifo_list.push(u); 
             break; // on break car notre dag doit avoir qu'1 sommet de degré entrant = 0 (s)
         }
     }
 
-    int pos_ordre = 0; 
+    int pos_ordre = 0; // pr mémoriser où on en est dans la position de l'ordre topo  
 
     while(fifo_list.size() > 0) 
     {
@@ -49,9 +49,8 @@ void Heuristics::init_ordre_topo() {
     }
 
     if((int)ordre_to_node.size() < data.dag_size) 
-        throw std::runtime_error("Heuristic::init_ordre_topo() -> ordre topologique trouvé incorrect"); 
+        throw std::runtime_error("Heuristic::init_ordre_topo() -> ordre topologique trouvé incorrect/innexistant"); 
 
-        
 }
 
 
@@ -227,6 +226,10 @@ bool Heuristics::metropolis(double temp, int delta, std::mt19937& gen) const {
 
 
 void Heuristics::SAA_optimize(double temp, int iter_max) {
+
+    std::cout << "Execution recuit simulé : " << std::endl; 
+    std::cout << "temp : " << temp << ", iter_max : " << iter_max; 
+    std::cout << std::endl;
 
     std::random_device rd; // création graine aléatoire 
     std::mt19937 gen(rd()); // moteur aléatoire 
