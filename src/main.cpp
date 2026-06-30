@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     Data data(file); 
 
     Heuristics h(data); // partie heuristique SAA 
-    h.SAA_optimize(2000, 500); 
+    h.SAA_optimize(1000, 100); 
     std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
     
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
