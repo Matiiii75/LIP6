@@ -10,7 +10,7 @@ SRC = common.cpp \
 	  Data.cpp \
 	  Heuristics.cpp \
 	  gen_graph.cpp \
-	  main.cpp
+	  main_gen_inst.cpp
 
 # 3. Transformation des .cpp en .o (fichiers objets)
 OBJ = $(SRC:.cpp=.o)
