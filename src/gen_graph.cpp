@@ -36,11 +36,13 @@ void Dag::compute_transitive_closure() {
     TC = trans_closure; 
 }
 
-void Dag::write_in_file() const {
+void Dag::write_in_file(int ID) const {
     
     std::string file_name = std::to_string(nb_nodes) + "_n_" 
-        + std::to_string(degenerascy) + "_k"; 
-    std::string path_to_file = "../inst/" + file_name + ".txt"; 
+        + std::to_string(degenerascy) + "_k_" 
+        + std::to_string(ID) + "_ID"; 
+    
+        std::string path_to_file = "../inst/" + file_name + ".txt"; 
 
     std::ofstream file_to_write; 
     file_to_write.open(path_to_file); 
@@ -63,6 +65,9 @@ void Dag::write_in_file() const {
             
         }
     }
+
+    file_to_write.close(); 
+
 }
 
 void Dag::compute_HG() {

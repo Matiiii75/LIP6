@@ -25,7 +25,8 @@ struct Dag
     void compute_transitive_closure(); 
 
     // écrit le graphe dans un fichier .txt 
-    void write_in_file() const; 
+    // ID permet de différencier des instances qui auraient les mm n & p
+    void write_in_file(int ID) const; 
 
     // calcule le graphe de co-comparabilité du dag 
     void compute_HG(); 
