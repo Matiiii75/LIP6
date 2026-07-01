@@ -3,6 +3,9 @@
 
 int main(int argc, char* argv[]) {
 
+    if(argc != 2) 
+        throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
+
     std::string file = argv[1]; 
     Data data(file); 
 

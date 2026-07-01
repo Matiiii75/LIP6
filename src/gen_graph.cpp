@@ -7,33 +7,38 @@ Dag::Dag(int size) {
 
 void Dag::compute_transitive_closure() { 
 
-    std::vector<std::vector<bool>> trans_closure(nb_nodes, 
-        std::vector<bool>(nb_nodes,0)); // init trans closure tt a 0
+    // redimensionne le vecteur pr avoir nb_nodes lignes 
+    // chaque bitset vaut 0 au début 
+    TC.assign(nb_nodes, std::bitset<2001>()); 
     
-    // on copie les relations du graphe 
+    // remplissage initial
+    // les diagonales valent 1 
+    // et on copie la matrice d'adjacence du graphe
     for(int i = 0; i < nb_nodes; ++i) {
+        TC[i].set(i); // TC[i][i] = 1
         for(int j : dag[i]) {
-            trans_closure[i][j] = true; 
+            TC[i].set(j);  // TC[i][j] = 1
         }
     }
-    
-    for(int i = 0; i < nb_nodes; ++i) 
-        trans_closure[i][i] = true; // la diagonale vaut 1
 
-    
     for(int k = 0; k < nb_nodes; ++k) {
         for(int i = 0; i < nb_nodes; ++i) {
-            for(int j = 0; j < nb_nodes; ++j) {
 
-                // si i->k & k->j alors i->j
-                if(trans_closure[i][k] && trans_closure[k][j])
-                    trans_closure[i][j] = true; 
+            // test(k) vérifie si le bit k vaut 1 (TC[i][k] = 1)
+            if(TC[i].test(k)) TC[i] |= TC[k]; 
+            
+            // si TC[i][k] vaut 1, on veut regarder tous les j tels que 
+            // TC[k][j] = 1 et ainsi mettre TC[i][j] = 1 par transitivité. 
+            // le bitset est pratique il permet de faire ça rapidement grâce au OU logique. 
+            // si on considère un certain indice j, TC[i][j] OU TC[k][j] vaut : 
 
-            }
+            // -> 0 OU 0 = 0  (si TCij = 0 et TCkj = 0 alors TC[i][j] = 0)
+            // -> 1 OU 0 = 1  (si TCij = 1 et TCkj = 0 alors TC[i][j] = 1)
+            // -> 0 OU 1 = 1  (si TCij = 0 et TCkj = 1 alors TC[i][j] = 1)
+            // -> 1 OU 1 = 1  (si TCij = 1 et TCkj = 1 alors TC[i][j] = 1)
+
         }
     }
-
-    TC = trans_closure; 
 }
 
 void Dag::write_in_file(int ID) const {
@@ -78,7 +83,8 @@ void Dag::compute_HG() {
     for(int i = 0; i < nb_nodes; ++i) {
         for(int j = i+1; j < nb_nodes; ++j) {
 
-            if(TC[i][j] == 0 && TC[j][i] == 0) {
+            // TC[i].test(j) vaut vrai si TC[i][j] = 1
+            if(!TC[i].test(j) && !TC[j].test(i)) { // si TC[i][j] = 0 ET TC[j][i] == 0 -> ils sont incomparables. 
                 HG[i].push_back(j); 
                 HG[j].push_back(i); 
                 count_nb_edge++; 

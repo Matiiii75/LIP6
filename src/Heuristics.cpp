@@ -115,10 +115,10 @@ bool Heuristics::is_move_valid(int indx) const {
         return false; // gestion cas impossibles 
 
     int u_l = ordre_to_node[indx]; 
-    int u_r = ordre_to_node[indx+1]; 
+    // u_r est ordre_to_node[indx+1]
 
-    if(node_order_matrix[u_l][indx] - node_order_matrix[u_l][indx+1])
-        return false; // si ça vaut 1, alors u_r succède à u_l 
+    if(node_order_matrix[u_l][indx] != node_order_matrix[u_l][indx+1])
+        return false; // si c'est différentl, alors u_r succède à u_l 
 
     return true; 
 }

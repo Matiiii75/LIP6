@@ -75,8 +75,8 @@ int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::unordere
     assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
 
     // on fait des alias sur les deux ensembles candidats 
-    const std::vector<int>& K = ID_to_cands[K_ID]; 
-    const std::vector<int>& C = ID_to_cands[C_ID]; 
+    // const std::vector<int>& K = ID_to_cands[K_ID]; 
+    // const std::vector<int>& C = ID_to_cands[C_ID]; 
 
     int C_weight = K_weight; // (l.3 - algo 2)
 

@@ -1,6 +1,6 @@
 # 1. Variables de configuration
 CXX = g++
-CXXFLAGS = # -fsanitize=address -g -Wall -Wextra -std=c++17
+CXXFLAGS = -O3 -march=native -std=c++17 -Wall -Wextra # -fsanitize=address -g -Wall -Wextra -std=c++17
 NAME = prog
 
 # 2. Liste des fichiers (À METTRE À JOUR QUAND TU AJOUTES UN FICHIER)
@@ -10,7 +10,7 @@ SRC = common.cpp \
 	  Data.cpp \
 	  Heuristics.cpp \
 	  gen_graph.cpp \
-	  main_gen_inst.cpp
+	  main.cpp
 
 # 3. Transformation des .cpp en .o (fichiers objets)
 OBJ = $(SRC:.cpp=.o)

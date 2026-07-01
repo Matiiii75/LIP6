@@ -27,9 +27,9 @@ struct KeyEqual {
 
 struct State_graph {
 
-    int s, t; // pour mémoriser les sommets source et puit qu'on a ajouté 
-
     const Data& data; // reférence constante vers un objet data passé au constructeur (évite copie)
+
+    int s, t; // pour mémoriser les sommets source et puit qu'on a ajouté 
 
     std::vector<std::vector<int>> ID_to_cands; // associe à chaque ID son ensemble candidat 
     

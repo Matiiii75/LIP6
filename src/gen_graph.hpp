@@ -6,6 +6,7 @@
 #include <fstream>
 #include <queue>
 #include <algorithm>
+#include <bitset>
 
 struct Dag 
 {
@@ -15,7 +16,16 @@ struct Dag
     int degenerascy; 
     int HG_nb_edge; 
 
-    std::vector<std::vector<bool>> TC; // transitive closure 
+    std::vector<std::bitset<2001>> TC; // transitive closure 
+    
+    // note pour le bitset<2001>. Plutôt que d'avoir une TC
+    // sous forme de matrice binaire, on a un vectuer de bitsets
+    // qui sont des tableaux de bits (ici 2001) bits au plus
+    // qui sont contigus en mémoire (gain massif de temps)
+    // la taille des bit sets doit malheuresement être choisie a l'avance. 
+    // donc, comme je ne prévois pas de générer des instances de plus de 2000
+    // sommets pr l'instant, j'ai choisis 2001 
+
     std::vector<std::vector<int>> HG; // graphe de co-comparabilité 
 
     // constructeur 
