@@ -5,7 +5,7 @@ void gen_graphs_for_stats() {
 
     std::ofstream csv("../data.csv"); // on va écrire les résultats obtenus dedans 
 
-    for(int n = 1000; n <= 2000; n+=100) {
+    for(int n = 100; n <= 5000; n+=100) {
         for(float p = 0.05; p < 1.0; p += 0.05) {
             for(int test = 0; test < 10; ++test) {
 
