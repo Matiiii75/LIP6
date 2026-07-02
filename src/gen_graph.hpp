@@ -16,7 +16,7 @@ struct Dag
     int degenerascy; 
     int HG_nb_edge; 
 
-    std::vector<std::bitset<2001>> TC; // transitive closure 
+    std::vector<std::bitset<5001>> TC; // transitive closure 
     
     // note pour le bitset<2001>. Plutôt que d'avoir une TC
     // sous forme de matrice binaire, on a un vectuer de bitsets

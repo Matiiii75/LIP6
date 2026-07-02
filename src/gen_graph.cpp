@@ -9,7 +9,7 @@ void Dag::compute_transitive_closure() {
 
     // redimensionne le vecteur pr avoir nb_nodes lignes 
     // chaque bitset vaut 0 au début 
-    TC.assign(nb_nodes, std::bitset<2001>()); 
+    TC.assign(nb_nodes, std::bitset<5001>()); 
     
     // remplissage initial
     // les diagonales valent 1 
