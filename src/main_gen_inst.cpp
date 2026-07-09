@@ -1,10 +1,21 @@
 #include "gen_graph.hpp"
 
+void gen_single_inst(int n, float p, int ID) {
+    
+    Dag dag(n); 
+    dag.gen_graph(p); 
+    dag.compute_transitive_closure(); 
+    dag.compute_HG(); 
+    dag.compute_degenerascy(); 
+
+    dag.write_in_file(ID); 
+
+}   
 
 void gen_graphs_for_stats() {
 
     std::ofstream csv("../data.csv"); // on va écrire les résultats obtenus dedans 
-    std::vector<int> wanted_n = {100,500,1000}; 
+    std::vector<int> wanted_n = {100}; 
 
     for(int n : wanted_n) {
         for(float p = 0.05; p < 1.0; p += 0.05) {
@@ -36,7 +47,8 @@ void gen_graphs_for_stats() {
 
 
 int main() {
-    gen_graphs_for_stats(); 
+    for(int i = 0; i < 10; ++ i) 
+        gen_single_inst(500, 0.005, i); 
     return 0; 
 }
 
