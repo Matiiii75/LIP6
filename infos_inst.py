@@ -1,4 +1,31 @@
 import os 
+import shutil
+
+def move_inst(path:str): 
+	"""
+	Cette fonction bouge les instances a 
+	n = 100, 500 et 1000 dans un dossier "small_inst"	
+	"""
+
+	folder_content = os.listdir(path)
+	for inst in folder_content: 
+		parsed_inst = inst.split("_")
+
+		n =  int(parsed_inst[0])
+		
+		if n == 100 or n == 500 or n == 1000:
+			
+			source = os.path.join("inst", inst)
+			destination = os.path.join("small_inst",inst)
+			
+			try:
+				shutil.copy2(source, destination)
+				print("copie fichier ", source, " reussie")
+			except FileNotFoundError:
+				print("erreur, le fichier n'existe pas")
+
+
+
 
 def get_inst_folder_infos(path:str):
 
@@ -24,4 +51,5 @@ def get_inst_folder_infos(path:str):
 		counter[key].sort() 
 		print(key, " -> ", counter[key])
 
-get_inst_folder_infos("inst/") 
+
+move_inst("inst/")
