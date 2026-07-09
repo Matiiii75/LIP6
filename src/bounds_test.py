@@ -49,8 +49,8 @@ class Heuristic:
         
         # calcule des structures 
         self.compute_TC()
-        self.compute_HG()
-        self.compute_degenerascy()
+        # self.compute_HG()
+        # self.compute_degenerascy()
 
 
     def display_Dag(self): 
@@ -386,7 +386,7 @@ def lance_test(inst:str, taux_completion:float):
     taille_partielle = int(pb.nb_node*taux_completion)
 
     ordre_topo = pb.trouve_ordre_topo(taille_partielle)
-    pb.checker(ordre_topo)
+    # pb.checker(ordre_topo)
 
     partial_DSC_value = pb.compute_partial_DSC(ordre_topo)
     LB1 = pb.compute_LB1(ordre_topo)
@@ -399,10 +399,10 @@ def write_infos(path_to_write:str):
     instances = [f for f in sorted(os.listdir("../inst")) if not f.startswith(".")]
     with open(path_to_write, "w") as f: 
         for inst in instances: 
-            print(inst)
+            print(inst, flush=True)
             ratios = [0.25,0.5,0.75]
             for ratio in ratios: 
-
+                print("ratio : ", ratio, flush=True)
                 pdscv, L1, L2 = lance_test(f"../inst/{inst}", ratio)
                 f.write(f"{inst} {ratio} {pdscv} {L1} {L2}\n")
 
