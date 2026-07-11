@@ -396,19 +396,13 @@ def lance_test(inst:str, taux_completion:float):
 
 def write_infos(path_to_write:str): 
 
-    instances = [f for f in sorted(os.listdir("../inst")) if not f.startswith(".")]
+    instances = [f for f in sorted(os.listdir("../inst_new")) if not f.startswith(".")]
     with open(path_to_write, "w") as f: 
         for inst in instances: 
             print(inst, flush=True)
             ratios = [0.25,0.5,0.75]
             for ratio in ratios: 
                 print("ratio : ", ratio, flush=True)
-                pdscv, L1, L2 = lance_test(f"../inst/{inst}", ratio)
+                pdscv, L1, L2 = lance_test(f"../inst_new/{inst}", ratio)
                 f.write(f"{inst} {ratio} {pdscv} {L1} {L2}\n")
-
-    
-write_infos("../data_bornes.txt")
-
-    
-
 

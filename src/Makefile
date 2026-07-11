@@ -29,7 +29,7 @@ $(NAME): $(OBJ)
 
 # 5. Nettoyage
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) prog
 
 fclean: clean
 	rm -f $(NAME)

@@ -1,6 +1,9 @@
 #include "Master.hpp"
 #include "Heuristics.hpp"
 
+// éxécute SAA sur une instance donnée 
+// calcule et affiche la valeur obtenue 
+// n'écrit rien dans un fichier 
 void run_SAA(Data& data) {
 
     Heuristics h(data); // partie heuristique SAA 
@@ -9,14 +12,15 @@ void run_SAA(Data& data) {
 
 }
 
+// éxécute l'algo de complexité paramétrée pour une instance donnée 
+// affiche l'ordre topo optimal, la valeur associée, check la validité 
+// et affiche le nombre de sommets de SGG généré, ainsi que le nombre de hash différents 
+// n'écrit rien dans un fichier 
 void run_param_comp_algo(Data& data) {
 
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     Master prog(data, 0, data.dag_size-1); 
     prog.build_SG(); 
-    
-    // prog.SG.display_SG_detail(); // à décommenter pour afficher le graphe d'états et ses données 
-    // prog.SG.display_weights(); 
 
     std::vector<int> ordre_topo; 
     ordre_topo = prog.rebuild_opt_order(); 
@@ -38,6 +42,8 @@ void run_param_comp_algo(Data& data) {
     std::cout << "nombre de candidats : " << prog.SG.ID_to_cands.size() << std::endl;
 
 }
+
+
 
 // arg 0 -> ./prog 
 // arg 1 -> nom de l'instance 
@@ -70,6 +76,36 @@ int main(int argc, char* argv[]) {
             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
     }
 
+    return 0; 
+}
+
+#include <filesystem> // pr gérer la recherche dans un dossier du pc (C++17)
+
+// petit main pour gérer l'écriture des résultats de SAA dans un fichier texte 
+int main2() {
+
+    // commencer par stocker tous les fichiers dans le dossier d'instances
+    std::filesystem::path chemin = "../inst/"; 
+    std::vector<std::string> content_folder; 
+   
+    for(const auto& entree : std::filesystem::directory_iterator(chemin)) 
+        content_folder.push_back(entree.path().filename().string()); 
+    
+    // puis, ouvrir fichier d'écriture 
+    std::ofstream writing("../SAA_infs.txt"); 
+
+    for(const std::string& inst : content_folder)
+    {   
+        if(inst == ".DS_Store") continue; 
+        std::cout << "traitement de " << inst << std::endl; 
+        std::string path = "../inst/" + inst; 
+        Data data(path); // lire l'instance 
+        Heuristics h(data); // lancer SAA 
+        h.SAA_optimize(1000, 100); // avec temp = 1000 et palier = 100
+        writing << inst << " " << h.obj_val << std::endl; // écrire la donnée 
+    }
+
+    writing.close(); 
     return 0; 
 }
 

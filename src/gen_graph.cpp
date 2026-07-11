@@ -47,7 +47,7 @@ void Dag::write_in_file(int ID) const {
         + std::to_string(degenerascy) + "_k_" 
         + std::to_string(ID) + "_ID"; 
     
-        std::string path_to_file = "../inst/" + file_name + ".txt"; 
+        std::string path_to_file = "../inst_new/" + file_name + ".txt"; 
 
     std::ofstream file_to_write; 
     file_to_write.open(path_to_file); 
