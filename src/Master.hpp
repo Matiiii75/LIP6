@@ -52,7 +52,6 @@ struct Master {
      */
     bool checker_DSC(const std::vector<int>& ordre_topo, int val_found) const; 
 
-
 }; 
 
 

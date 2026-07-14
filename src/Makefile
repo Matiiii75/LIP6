@@ -10,6 +10,7 @@ SRC = common.cpp \
 	  Data.cpp \
 	  Heuristics.cpp \
 	  gen_graph.cpp \
+	  Timer.cpp \
 	  main.cpp
 
 # 3. Transformation des .cpp en .o (fichiers objets)
