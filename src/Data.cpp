@@ -106,7 +106,7 @@ void Data::compute_transitive_closure() {
         }
     }
 
-    TC = trans_closure; 
+    this->TC = trans_closure; 
 }
 
 

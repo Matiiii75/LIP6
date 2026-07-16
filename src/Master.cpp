@@ -1,8 +1,9 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t) : data(_data), SG(_data, _s, _t)
+Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_data), SG(_data, _s, _t), time_limit(_time_limit)
 {
+    master_time_data.start_timer(); // début du timer de Master 
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
@@ -37,8 +38,19 @@ std::unordered_set<int> Master::compute_cut_set(const std::vector<int>& cand) co
 
 void Master::build_SG() {
 
+    int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
+    bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 
+
     while(!L.empty()) 
     {  
+
+        if(iteration_count % 10000 == 0) { // VERIFICATION < TIME_LIMIT 
+            double temps_courant = master_time_data.get_temps_passe(); 
+            if(temps_courant >= time_limit) {
+                stoped_prema = true; 
+                break; 
+            }
+        }
 
         int C_ID = L.front(); // on récupère l'ID de l'ens. cand. devans la FIFO
         L.pop(); // on l'efface 
@@ -101,6 +113,9 @@ void Master::build_SG() {
         }
 
     }
+
+    if(stoped_prema == false) // si on a stoppé a cause du temps -> on a pas de solution à proposer 
+        found_solution = true; 
 
 }
 
@@ -184,5 +199,45 @@ bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) cons
 }
 
 
+void Master::extract_results() {
+
+    this->optimal_order = rebuild_opt_order(); 
+    this->optimal_value = best_dist.back(); 
+
+    if(this->checker_DSC(this->optimal_order, this->optimal_value) == false) {
+        throw std::runtime_error("Master::checker_DSC -> solution non valide"); 
+    }
+
+    this->nb_hash_generated = SG.hash_to_ID.size(); 
+    this->nb_candidats = SG.ID_to_cands.size(); 
+
+}
 
 
+void Master::display_results(bool display_opt_order, bool display_opt_val, bool hash_infos) const {
+
+    std::cout << "### Affichage résultats ###" << std::endl;
+    std::cout << std::endl;
+    
+    if(display_opt_order) {
+        std::cout << "Ordre topologique optimal : " << std::endl;
+        for(int i : this->optimal_order) 
+            std::cout << i << " "; 
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+
+    if(display_opt_val) 
+        std::cout << "valeur optimale : " << this->optimal_value << std::endl;
+
+    std::cout << std::endl;
+
+    if(hash_infos) {
+        std::cout << "nomre de hash généré : " << this->nb_hash_generated << std::endl;
+        std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
+    }
+
+    std::cout << std::endl; 
+
+}

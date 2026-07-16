@@ -1,5 +1,6 @@
 #include "Master.hpp"
 #include "Heuristics.hpp"
+#include "Timer.hpp"
 
 // éxécute SAA sur une instance donnée 
 // calcule et affiche la valeur obtenue 
@@ -7,7 +8,7 @@
 void run_SAA(Data& data) {
 
     Heuristics h(data); // partie heuristique SAA 
-    h.SAA_optimize(1000, 100); 
+    h.SAA_optimize(5000, 500); 
     std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
 
 }
@@ -19,27 +20,32 @@ void run_SAA(Data& data) {
 void run_param_comp_algo(Data& data) {
 
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
-    Master prog(data, 0, data.dag_size-1); 
-    prog.build_SG(); 
+    int source = 0; 
+    int puit = data.dag_size - 1; 
+    double time_limit = 1200.00; 
+    Master prog(data, source, puit, time_limit);
 
-    std::vector<int> ordre_topo; 
-    ordre_topo = prog.rebuild_opt_order(); 
+    prog.build_SG(); // lancement de la construction de l'algorithme 
 
-    std::cout << "affichage ordre topo : " << std::endl; 
-    for(int i : ordre_topo)
-        std::cout << i << " "; 
-    std::cout << std::endl;
+    if(prog.found_solution) {
+
+        prog.extract_results(); 
     
-    int val_found = prog.best_dist.back(); 
+        bool display_opt_order = true; 
+        bool display_opt_val = true; 
+        bool display_hash_infos = true; 
 
-    std::cout << "De valeur : " << val_found << std::endl;
+        prog.display_results( // affichage du résultat 
+            display_opt_order,
+            display_opt_val,
+            display_hash_infos
+        ); 
 
-    std::cout << "Entrée checker_DSC" << std::endl;
-    bool verif = prog.checker_DSC(ordre_topo, val_found); 
-    if(verif) std::cout << "checker OK !" << std::endl;
+    } else {
 
-    std::cout << "nombre de hash généré : " << prog.SG.hash_to_ID.size() << std::endl;
-    std::cout << "nombre de candidats : " << prog.SG.ID_to_cands.size() << std::endl;
+        std::cout << "Arrêt algorithme : time_limit excedée" << std::endl;
+
+    }
 
 }
 
@@ -57,8 +63,13 @@ int main(int argc, char* argv[]) {
 
     int mode_execution = atoi(argv[2]); 
 
+    Timer tm; 
+    tm.start_timer(); 
+
     std::string file = argv[1]; 
     Data data(file); 
+
+    double data_import_time = tm.get_temps_passe(); // récupère le temps requis pour gérer les data 
 
     switch (mode_execution) 
     {
@@ -75,6 +86,13 @@ int main(int argc, char* argv[]) {
         default: 
             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
     }
+
+    double temps_total = tm.get_temps_passe();
+    double temps_generation_SG = temps_total - data_import_time; 
+    std::cout << "temps total -> " << temps_total << std::endl;
+    std::cout << "temps gestion des data -> " << data_import_time << std::endl;
+    std::cout << "temps passé dans la génération du graphe d'états -> " << temps_generation_SG; 
+    std::cout << std::endl;
 
     return 0; 
 }
@@ -108,5 +126,4 @@ int main2() {
     writing.close(); 
     return 0; 
 }
-
 
