@@ -115,24 +115,37 @@ int extrait_degen(const std::string& inst) {
     return k; 
 }
 
+// trie les noms d'instances par ordre croissant de la degeneracy 
+void trie_instances_degen_croissante(std::vector<std::string>& instances) {
+
+    std::sort(instances.begin(), instances.end(),
+        [](const std::string& a, const std::string& b)
+    {
+        return extrait_degen(a) < extrait_degen(b); 
+    });
+
+}
+
 
 int main() {
 
-    int degen_max; 
-    std::cout << "quelle degeneracy maximale considérer ? "; 
-    std::cin >> degen_max; 
+    int degen_max = 50; 
 
     std::filesystem::path chemin = "../instances/k_variations/"; 
     std::vector<std::string> content_folder; 
 
-    for(const auto& entree : std::filesystem::directory_iterator(chemin)) 
-        content_folder.push_back(entree.path().filename().string()); 
+    for(const auto& entree : std::filesystem::directory_iterator(chemin))  {
+        if(entree.path().filename().string() == ".DS_Store") continue; 
+        content_folder.push_back(entree.path().filename().string());
+    }
+         
+
+    trie_instances_degen_croissante(content_folder); 
 
     // Execution de l'algorithme pour chaque instance 
 
     for(auto inst : content_folder) {
 
-        if(inst == ".DS_Store") continue; 
         if(extrait_degen(inst) > degen_max) continue; // ignore les instances de trop grande degen
 
         std::cout << inst << " -> "; 
