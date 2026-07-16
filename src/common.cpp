@@ -137,5 +137,14 @@ int random_int(int a, int b, std::mt19937& gen)
 }
 
 
+void write_main_infos(const std::string& inst, int val_opt, double time, int nb_nodes_SG) {
+
+    std::ofstream writing("../results/results_main_algo.txt", std::ios::app); 
+    writing << inst << " " << val_opt << " " << nb_nodes_SG << " " << time << std::endl;
+    writing.close(); 
+
+}
+
+
 
 

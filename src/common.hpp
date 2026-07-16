@@ -84,3 +84,14 @@ void display_FIFO(std::queue<int> Q);
 // fonction qui tire un entier aléatoire dans [a,b]
 int random_int(int a, int b, std::mt19937& gen); 
 
+
+/**
+ * @brief Ecrit les données obtenues par l'algo de complexité paramétrée
+ * dans un fichier texte dans : "results/data_main.txt"
+ * @param inst le nom de l'instance 
+ * @param val_opt la valeur optimale
+ * @param time le temps total nécéssité (calcul TC + main algo)
+ * @param nb_nodes_SG le nombre de sommets dans le graphe d'états construit 
+ */
+void write_main_infos(const std::string& inst, int val_opt, double time, int nb_nodes_SG); 
+

@@ -50,13 +50,12 @@ void run_param_comp_algo(Data& data) {
 }
 
 
-
 // arg 0 -> ./prog 
 // arg 1 -> nom de l'instance 
 // arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
 //          1 si on lance juste le SAA 
 //          2 si on lance SAA + algo complexité paramétrée 
-int main(int argc, char* argv[]) {
+int main_bis(int argc, char* argv[]) {
 
     if(argc != 3) 
         throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
@@ -98,6 +97,81 @@ int main(int argc, char* argv[]) {
 }
 
 #include <filesystem> // pr gérer la recherche dans un dossier du pc (C++17)
+#include <sstream>
+
+// on lui donne un nom d'instance
+// il extrait la degen du nom et la renvoie
+int extrait_degen(const std::string& inst) {
+
+    std::stringstream ss(inst); 
+    std::string morceau; 
+
+    std::getline(ss,morceau,'_'); // extrait la valeur de n
+    std::getline(ss,morceau,'_'); // extrait 'n'
+    std::getline(ss,morceau,'_'); // extrait la valeur de k
+    
+    int k = std::stoi(morceau); 
+    
+    return k; 
+}
+
+
+int main() {
+
+    int degen_max; 
+    std::cout << "quelle degeneracy maximale considérer ? "; 
+    std::cin >> degen_max; 
+
+    std::filesystem::path chemin = "../instances/k_variations/"; 
+    std::vector<std::string> content_folder; 
+
+    for(const auto& entree : std::filesystem::directory_iterator(chemin)) 
+        content_folder.push_back(entree.path().filename().string()); 
+
+    // Execution de l'algorithme pour chaque instance 
+
+    for(auto inst : content_folder) {
+
+        if(inst == ".DS_Store") continue; 
+        if(extrait_degen(inst) > degen_max) continue; // ignore les instances de trop grande degen
+
+        std::cout << inst << " -> "; 
+
+        // débuter le minuteur 
+        Timer tm; 
+        tm.start_timer(); 
+
+        // lire la data 
+        std::string path_to_isnt = "../instances/k_variations/" + inst; 
+        Data data(path_to_isnt); 
+
+        // lancer l'execution pour l'instance 
+        int source = 0; 
+        int puit = data.dag_size - 1; 
+        double time_limit = 1200.00; // time limit de 20 minutes 
+        Master prog(data, source, puit, time_limit); 
+
+        prog.build_SG(); 
+        
+        int val_opt = -1; 
+        int nb_nodes_SG = -1;
+        double total_time = tm.get_temps_passe(); 
+
+        if(prog.found_solution) // si on a eu le time de trouver une solution 
+        { 
+            prog.extract_results(); // on extrait les résultats
+            val_opt = prog.optimal_value; 
+            nb_nodes_SG = prog.nb_candidats;  
+        } 
+
+        write_main_infos(inst, val_opt, total_time, nb_nodes_SG);
+        
+        std::cout << "val : " << val_opt << " | time : " << total_time << " | number nodes in SG : " << nb_nodes_SG << std::endl;
+
+    }
+
+}
+
 
 // petit main pour gérer l'écriture des résultats de SAA dans un fichier texte 
 int main2() {

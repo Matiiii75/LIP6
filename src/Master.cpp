@@ -191,10 +191,8 @@ bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) cons
         std::cout << "Valeur trouvée : " << val_found << std::endl;
         std::cout << "Valeur correcte : " << obj_val << std::endl;
         return false; 
-    } else {
-        std::cout << "Valeur calculée OK !" << std::endl;
-    }
-
+    } 
+    
     return true; 
 }
 
