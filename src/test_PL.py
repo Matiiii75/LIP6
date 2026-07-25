@@ -106,9 +106,9 @@ def fast_disjoint_balanced_heuristic(blocages: list[list]) -> int:
     element_to_sets = {}
     for j, b in enumerate(blocages):
         for e in b:
-            if e not in element_to_sets:
+            if e not in element_to_sets: # si on l'avait pas déjà rencontré -> on l'ajoute 
                 element_to_sets[e] = []
-            element_to_sets[e].append(j)
+            element_to_sets[e].append(j) # e est ds le j-eme blocage 
             
     # On trie les éléments : on traite d'abord ceux qui ont le MOINS de choix 
     # (les éléments exclusifs) pour poser la structure forcée du graphe.
@@ -121,7 +121,7 @@ def fast_disjoint_balanced_heuristic(blocages: list[list]) -> int:
     for e in elements_tries:
         options = element_to_sets[e]
         # L'ÉQUILIBRAGE : On donne l'élément à l'ensemble candidat 
-        # qui a la plus PETITE taille courante à ce moment-là.
+        # qui a la plus PETITE taille courante à ce moment-la (et qui le contenait initialement)
         best_set = min(options, key=lambda j: tailles_courantes[j])
         
         nouveaux_blocages[best_set].append(e)
@@ -132,7 +132,13 @@ def fast_disjoint_balanced_heuristic(blocages: list[list]) -> int:
     cardinaux.sort() # Ordre croissant
     
     borne = sum(cardinaux[i] * (k - i) for i in range(k))
-    return borne
+
+    # on doit retirer 1 à chaque ensemble blocant contenant au moins 1 élément (qui aura déjà été compté par partial dsc value)
+    # en effet, pour ceux qu'on a complètement vidé : on a appliqué une relaxation en se disant : " on arrive pas a trouver de sommets 
+    # uniques le blocant, on va considérer que rien ne le bloque, en contrepartie, on gagne le droit d'appliquer thoereme 8 sur le reste "
+    nb_blocs_non_vides = sum(1 for c in cardinaux if c > 0)
+
+    return borne - nb_blocs_non_vides
 
 
 

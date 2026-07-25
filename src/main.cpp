@@ -8,8 +8,14 @@
 void run_SAA(Data& data) {
 
     Heuristics h(data); // partie heuristique SAA 
-    h.SAA_optimize(5000, 500); 
+    h.SAA_optimize(10000, 10000); 
     std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
+
+    // SUPPRIMER DESSOUS SI DESINTERESSÉ D'AFFICHER DES ELEMENTS 
+    std::cout << "50 premiers jobs de l'ordre optimal : " << std::endl;
+    for(int i = 0; i < 50; ++i) {
+        std::cout << h.ordre_to_node[i] << ", "; 
+    } std::cout << std::endl;
 
 }
 
@@ -41,6 +47,12 @@ void run_param_comp_algo(Data& data) {
             display_hash_infos
         ); 
 
+        // SUPPRIMER CES COUT SI DESINTERESSÉ D'AFFICHER DES ÉLÉMENTS 
+        std::cout << "50 premiers jobs de l'ordre optimal : " << std::endl;
+        for(int i = 0; i < 50; ++i) {
+            std::cout << prog.optimal_order[i] << ","; 
+        } std::cout << std::endl;
+
     } else {
 
         std::cout << "Arrêt algorithme : time_limit excedée" << std::endl;
@@ -55,7 +67,8 @@ void run_param_comp_algo(Data& data) {
 // arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
 //          1 si on lance juste le SAA 
 //          2 si on lance SAA + algo complexité paramétrée 
-int main_bis(int argc, char* argv[]) {
+// ---> N'écrit pas de résultats dans un .txt <---
+int main(int argc, char* argv[]) {
 
     if(argc != 3) 
         throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
@@ -126,8 +139,9 @@ void trie_instances_degen_croissante(std::vector<std::string>& instances) {
 
 }
 
-
-int main() {
+// un main qui lance les instances automatiquement pour une degen = 50 
+// ATTENTION : écrit les données récoltées dans un fichier !!!!!!
+int main_bis() {
 
     int degen_max = 50; 
 
@@ -183,6 +197,7 @@ int main() {
 
     }
 
+    return 0; 
 }
 
 

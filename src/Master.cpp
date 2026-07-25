@@ -220,7 +220,7 @@ void Master::display_results(bool display_opt_order, bool display_opt_val, bool 
     if(display_opt_order) {
         std::cout << "Ordre topologique optimal : " << std::endl;
         for(int i : this->optimal_order) 
-            std::cout << i << " "; 
+            std::cout << i << ", "; 
         std::cout << std::endl;
     }
 
