@@ -53,3 +53,9 @@ void gen_graphs_for_stats() {
 
 }
 
+int main() {
+
+    gen_single_inst(50,0.2,0); 
+    return 0; 
+}
+

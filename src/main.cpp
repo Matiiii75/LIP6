@@ -7,8 +7,10 @@
 // n'écrit rien dans un fichier 
 void run_SAA(Data& data) {
 
-    Heuristics h(data); // partie heuristique SAA 
-    h.SAA_optimize(10000, 10000); 
+    Heuristics h(data); // partie heuristique SAA
+    double ideal_temp = h.init_temp(); 
+    std::cout << "ideal temp -> " << ideal_temp << std::endl;
+    h.SAA_optimize(ideal_temp, 100000); 
     std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
 
     // SUPPRIMER DESSOUS SI DESINTERESSÉ D'AFFICHER DES ELEMENTS 

@@ -84,7 +84,7 @@ struct Heuristics {
     
     /**
      * @brief appeler si on applique le mouvement ui/ui+1
-     * @param indx c'est l'indice i 
+     * @param indx c'est l'indice i         
      * @param delta le delta calculé pour maj obj_val
      * @return modifie node_order_matrix, ordre_to_node, node_to_ordre & obj_val
      */
@@ -99,6 +99,12 @@ struct Heuristics {
      * @return true si on accepte le mouvement, false si on le rejette 
      */
     bool metropolis(double temp, int delta, std::mt19937& gen) const; 
+
+
+    /**
+     * @brief Détermine une bonne température intiale permettant d'accepter 85% de mouvements dégradants
+     */
+    double init_temp() const; 
 
 
     /**

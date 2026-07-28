@@ -6,6 +6,7 @@ Heuristics::Heuristics(const Data& _data) : data(_data)
     init_ordre_topo(); 
     compute_node_order_matrix();
     obj_val = compute_DSC_obj(); 
+
 }
 
 
@@ -222,6 +223,36 @@ bool Heuristics::metropolis(double temp, int delta, std::mt19937& gen) const {
     double p = distrib(gen); 
     if(p <= exp(-(double)delta/temp)) return true; 
     return false; 
+}
+
+
+double Heuristics::init_temp() const
+{
+    constexpr double wanted_acceptance = 0.95;
+
+    double somme_delta = 0.0;
+    int count = 0;
+
+    for (int i = 1; i < data.dag_size - 1; ++i) // on va évaluer tous les mouvement ui <-> ui+1 de la solution
+    {
+        if (!is_move_valid(i))
+            continue; // si invalide -> ignorer 
+
+        int delta = compute_delta_DSC(i);
+
+        if (delta > 0) // si le delta empire 
+        {
+            somme_delta += delta; 
+            ++count; 
+        }
+    }
+
+    if (count == 0) // si aucun delta empirant trouvé 
+        return 1000.0; // 1000 par défaut 
+
+    double meanDelta = somme_delta / count;
+
+    return -meanDelta / std::log(wanted_acceptance);
 }
 
 
