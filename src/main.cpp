@@ -13,12 +13,6 @@ void run_SAA(Data& data) {
     h.SAA_optimize(ideal_temp, 100000); 
     std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
 
-    // SUPPRIMER DESSOUS SI DESINTERESSÉ D'AFFICHER DES ELEMENTS 
-    std::cout << "50 premiers jobs de l'ordre optimal : " << std::endl;
-    for(int i = 0; i < 50; ++i) {
-        std::cout << h.ordre_to_node[i] << ", "; 
-    } std::cout << std::endl;
-
 }
 
 // éxécute l'algo de complexité paramétrée pour une instance donnée 
@@ -48,12 +42,6 @@ void run_param_comp_algo(Data& data) {
             display_opt_val,
             display_hash_infos
         ); 
-
-        // SUPPRIMER CES COUT SI DESINTERESSÉ D'AFFICHER DES ÉLÉMENTS 
-        std::cout << "50 premiers jobs de l'ordre optimal : " << std::endl;
-        for(int i = 0; i < 50; ++i) {
-            std::cout << prog.optimal_order[i] << ","; 
-        } std::cout << std::endl;
 
     } else {
 

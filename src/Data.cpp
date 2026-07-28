@@ -138,6 +138,7 @@ void Data::display_dag() const {
 
 }
 
+
 void Data::display_reverse_dag() const {
 
     for(int i = 0; i < (int)reverse_dag.size(); ++i) {

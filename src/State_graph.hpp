@@ -44,6 +44,8 @@ struct State_graph {
 
     std::vector<int> weights; // les poids de chaque ID de candidats (par index)
 
+    std::vector<int> taille_blocages_hors_cut; 
+
 
     State_graph(const Data& _data, int _s, int _t); 
 
@@ -116,6 +118,14 @@ struct State_graph {
     void set_weight(int ID, int w); 
 
 
+    /**
+     * @brief Cette fonction calcule la taille des ensembles de blocages hors cut set (Phi(u)) pour tout u \in V
+     * @note la source et le puit auront une taille = 0 par défaut. Cette fonction doit être appelé avant de
+     *      construire SG_G
+     */
+    void compute_taille_blocages_hors_cut(); 
+
+
     // méthode d'affichage de SG dans le terminal 
     void display_SG() const; 
 
@@ -126,6 +136,10 @@ struct State_graph {
 
     // afficher les poids de chaque ensemble candidat
     void display_weights() const; 
+
+
+    // affiche les tailles des ensembles de blocages hors cut set 
+    void display_tailles_blocages_hors_cut() const; 
 
 }; 
 

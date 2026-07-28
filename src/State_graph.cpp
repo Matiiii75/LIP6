@@ -4,6 +4,8 @@
 State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s), t(_t) // constructeur 
 {
 
+    compute_taille_blocages_hors_cut(); // on calcule les tailles d'ens de blocages pr tt u \in V-{s,t}
+
     // ajouter le premier sommet à SG, 
     // il s'agit de l'ensemble des successeurs de s 
     // (l.1 - algo 1)
@@ -134,6 +136,25 @@ void State_graph::set_weight(int ID, int w) {
 }
 
 
+void State_graph::compute_taille_blocages_hors_cut() {
+
+    this->taille_blocages_hors_cut.resize(data.dag_size, 0); // tout mettre a 0 
+
+    for(int u = 1; u < t; ++u) { // pr chq u \in V-{s,t}
+        for(int w = 1; w < t; ++w) { // pr chq w sur un chemin entre u et un des succ direct de u
+            if(w == u) continue; // u != w 
+            if(!data.TC[u][w]) continue; // (si u -/-> w continuer) 
+            for(int v : data.dag[u]) { // pr tt succ direct de u
+                if(v == t || !data.TC[w][v]) continue; // si puit ou w -/-> v
+                taille_blocages_hors_cut[u]++; // w est dans blocage hors cut set de u 
+                break; // aller au prochain w 
+            }
+        }
+    }
+
+}
+
+
 void State_graph::display_SG() const {
 
     for(int i = 0; i < (int)SG.size(); ++i) {
@@ -189,6 +210,17 @@ void State_graph::display_weights() const {
             std::cout << u << " "; 
         std::cout << "} : " << weights[i] << std::endl; 
 
+    }
+
+}
+
+
+void State_graph::display_tailles_blocages_hors_cut() const {
+
+    std::cout << "--- AFFICHE BLOCAGES HORS CUT SET ---" << std::endl;  
+
+    for(int u = 0; u < data.dag_size; ++u) {
+        std::cout << u << " -> " << taille_blocages_hors_cut[u] << std::endl;
     }
 
 }
