@@ -1,21 +1,5 @@
 #include "common.hpp"
 
-
-bool is_disjointV2(const std::vector<int>& succ_gamma, int t, 
-    const std::vector<int>& C, const std::vector<std::vector<bool>>& TC) 
-{ 
-    for(int u : succ_gamma) { // pr chaque succ de gamma 
-        if(u == t) continue; // si c'est le puit -> ignorer 
-        for(int v : C) { // pr chaque candidat 
-            if(TC[v][u]) { // si y'a un chemin de v à u 
-                return true; // alors u pas dans S(C)
-            }
-        } 
-    }
-
-    return false; // si on arrive ici, tous les succ gamma sont dans S(C)
-}
-
 bool is_disjoint(const std::vector<int>& succ_gamma, int t, 
     const std::unordered_set<int> cut_set) 
 {

@@ -83,6 +83,7 @@ void Master::build_SG() {
             }
             // ELAGAGE -------------
         }
+        
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
     
