@@ -47,9 +47,9 @@ struct Master {
     /**
      * @brief calcul le cut set associé à un ensemble candidat
      * @param cand candidat pour lequel on recherche le cut set 
-     * @return unordered_set contenant le cut set 
+     * @return un vecteur de uint8_t valant 1 si l'indice est dans le cutset, 0 sinon 
      */
-    std::unordered_set<int> compute_cut_set(const std::vector<int>& cand) const; 
+    std::vector<uint8_t> compute_cut_set(const std::vector<int>& cand) const; 
 
 
     /**

@@ -77,7 +77,7 @@ struct State_graph {
      * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
      * @return le poids 
      */
-    int compute_weight_C(int C_ID, int K_ID, int c, const std::unordered_set<int>& cut_set) const ; 
+    int compute_weight_C(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const ; 
 
 
     /**
@@ -132,7 +132,7 @@ struct State_graph {
      * @param cut_set le cut_set depuis lequel on calcule LB2 
      * @warning cut_set contient la source et le puit. 
      */
-    int compute_LB2_from_C(const std::unordered_set<int>& cut_set, int partial_dsc_value); 
+    int compute_LB2_from_C(const std::vector<uint8_t>& cut_set, int partial_dsc_value); 
 
 
     // méthode d'affichage de SG dans le terminal 

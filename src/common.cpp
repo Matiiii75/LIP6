@@ -1,48 +1,18 @@
 #include "common.hpp"
 
 bool is_disjoint(const std::vector<int>& succ_gamma, int t, 
-    const std::unordered_set<int> cut_set) 
+    const std::vector<uint8_t>& cut_set) 
 {
     for(int u : succ_gamma) {
         if(u == t) continue; // puit -> ignorer 
-        if(cut_set.count(u) == 0)
+        if(cut_set[u] == 0) // si il est pas dans le cut_set
             return true; 
     }
     
     return false; 
 }
 
-bool is_includedV2(const std::vector<int>& v1, const std::vector<int>& v2, int t) {
-
-    if(v1.size() > v2.size())
-        return false; 
-
-    int j = 0; 
-    int v2_size = (int)v2.size(); 
-    int v1_size = (int)v1.size(); 
-
-    if(v1.back() == t) // on ignore le puit 
-        --v1_size; 
-    
-    for(int i = 0; i < v1_size; ++i) { // pr chq index de v1
-
-        while(j < v2_size && v2[j] < v1[i]) 
-            ++j; // while j dépasse pas taille(v2) ET on est plus petit que v1 : incrémenter 
-
-        if(j == v2_size || v1[i] != v2[j]) 
-            return false; // si on a dépassé la taille de v2 OU que v1(i) dépasse v2(j)
-        // -> conclusion : v1(i) n'existe pas dans v2
-        
-        ++j; // si le if d'avant s'est pas déclenché, on est dans le cas v1(i) = v2(j)
-        // -> on continue 
-            
-    }
-
-    return true; 
-}
-
-
-bool is_included(const std::vector<int>& v1, const std::unordered_set<int>& v2, int t) {
+bool is_included(const std::vector<int>& v1, const std::vector<uint8_t>& v2, int t) {
 
     int v1_size = (int)v1.size(); 
 
@@ -50,7 +20,8 @@ bool is_included(const std::vector<int>& v1, const std::unordered_set<int>& v2, 
         --v1_size; 
 
     for(int i = 0; i < v1_size; ++i) { // pr chq index de v1
-        if(v2.find(v1[i]) == v2.end()) return false; // si on le trouve pas dans v2  
+        int v_i = v1[i]; 
+        if(v2[v_i] == 0) return false; // si il est pas dans v2
     }
 
     return true; // si on arrive là c'est que tout élément de v1 est dans v2

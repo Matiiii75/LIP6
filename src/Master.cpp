@@ -17,26 +17,17 @@ Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_da
 }
 
 
-std::unordered_set<int> Master::compute_cut_set(const std::vector<int>& cand) const {
+std::vector<uint8_t> Master::compute_cut_set(const std::vector<int>& cand) const {
 
-    std::unordered_set<int> cut_set; // comme on connait k, on peut allouer a l'avance !!
-    
-    // j'utilise un vecteur de bool où tout est faux au debut. 
-    // on va parcourir les N_G^+(cand) et mettre vrai a l'indice de ceux qui y sont
-    // ensuite, suffira d'inverser les valeurs de vérité. 
-    std::vector<bool> is_in_cut_set(data.dag_size, false); 
+    // On se rappelle que pour calculer le cut-set, il faut déterminer les éléments 
+    // qui sont pas dans N_G^+(cand). On met tous les éléments à 1. On parcours N_G^+(cand)
+    // grâce à la transitive closure et on met 0 pr chq sommet qu'on rencontre.
+    std::vector<uint8_t> cut_set(data.dag_size, 1); 
 
     for(const int c : cand) { // pr chq candidat 
         for(int i = 0; i < data.dag_size; ++i) { // pr chq noeud du graphe
-            
-            if(data.TC[c][i]) is_in_cut_set[i] = true; // si c'est 1 dans la transitive closure -> true 
-
+            if(data.TC[c][i]) cut_set[i] = 0; // si c -> i, i n'est pas dans le cut-set 
         }
-    }
-
-    for(int i = 0; i < data.dag_size; ++i) {
-        if(is_in_cut_set[i] == false) 
-            cut_set.insert(i); // si c'est faux, alors il est hors successeur, donc dans le cut set 
     }
 
     return cut_set; 
@@ -63,26 +54,26 @@ void Master::build_SG() {
         L.pop(); // on l'efface 
 
         std::vector<int> C = SG.get_cand(C_ID); 
-        std::unordered_set<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
+        std::vector<uint8_t> cut_set = compute_cut_set(C); // on calcule le cut_set associé
         
-        if(cut_set.size() > 5) {
-            // ELAGAGE -------------
-            int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
-            int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
+        // if(cut_set.size() > 5) {
+        //     // ELAGAGE -------------
+        //     int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
+        //     int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
             
-            if(LB > SAA_value) {
+        //     if(LB > SAA_value) {
 
-                iteration_count++; 
-                if(iteration_count%10000 == 0) {
-                    std::cout << "ELAGAGE DETECTÉ -> "; 
-                    std::cout << "LB = " << LB << " | UB = " << SAA_value; 
-                    std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
-                }
-                continue; // continuer au prochain élément de L 
+        //         iteration_count++; 
+        //         if(iteration_count%10000 == 0) {
+        //             std::cout << "ELAGAGE DETECTÉ -> "; 
+        //             std::cout << "LB = " << LB << " | UB = " << SAA_value; 
+        //             std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
+        //         }
+        //         continue; // continuer au prochain élément de L 
 
-            }
-            // ELAGAGE -------------
-        }
+        //     }
+        //     // ELAGAGE -------------
+        // }
         
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
@@ -95,7 +86,7 @@ void Master::build_SG() {
 
             int curr_c = C[i]; // copie c 
 
-            cut_set.insert(curr_c); // on étend le cut set au noeud candidat 
+            cut_set[curr_c] = 1; // le candidat rentre dans le cut-set 
 
             for(const int u : data.dag[curr_c]) { // (l.7) : pr chq succ u du candidat
 
@@ -134,8 +125,8 @@ void Master::build_SG() {
             }
 
             // on fini la boucle sur curr_c 
-            // -> on l'efface pour passer au prochain candidat 
-            cut_set.erase(curr_c); 
+            // -> on l'enlève du cut-set et passe au prochain candidat 
+            cut_set[curr_c] = 0; 
         }
 
     }
