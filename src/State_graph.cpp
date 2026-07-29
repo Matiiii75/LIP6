@@ -155,6 +155,50 @@ void State_graph::compute_taille_blocages_hors_cut() {
 }
 
 
+int State_graph::compute_LB2_from_C(const std::unordered_set<int>& cut_set, int partial_dsc_value) {
+
+    std::unordered_set<int> hors_cut_set; 
+    for(int u = 0; u < data.dag_size; ++ u) { // remplir hors_cut_set 
+        if(u == s || u == t) continue; 
+        if(cut_set.count(u) > 0) continue; 
+        hors_cut_set.insert(u); 
+    }
+
+    int hcs_value = 0; 
+    int ics_value = 0; 
+
+    for(int u = 1; u < t; ++u) { // pr tt u \in V-{s,t}
+        
+        if(cut_set.count(u) == 0) { // si il est pas dans le cut set 
+            
+            hcs_value += taille_blocages_hors_cut[u]; 
+
+        } else { // si il est dans le cut_set 
+
+            int blocage_u_size = 0; // pr savoir exactement combien d'éléments bloquent u
+            for(int w : hors_cut_set) { // (t n'est pas dedans)
+                for(int v : data.dag[u]) {
+                    if(v == t) continue; 
+                    if(!data.TC[w][v]) continue; // si w -/-> v
+                    blocage_u_size++; // w compte dans le blocage de u 
+                    break; // aller au prochain w
+                }
+            }
+
+            if(blocage_u_size > 0) // on retire 1 car si u a au moins un successeur hors cut set, 
+                ics_value += blocage_u_size - 1; // on l'aura compté dans partial_dsc_value 
+        }
+
+    }
+
+    // std::cout << "ics = " << ics_value << " | "; 
+    // std::cout << "hcs = " << hcs_value << " | "; 
+    // std::cout << "pdscv = " << partial_dsc_value << std::endl;
+
+    return partial_dsc_value + hcs_value + ics_value; 
+}
+
+
 void State_graph::display_SG() const {
 
     for(int i = 0; i < (int)SG.size(); ++i) {

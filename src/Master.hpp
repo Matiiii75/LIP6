@@ -2,6 +2,7 @@
 
 #include "Data.hpp"
 #include "State_graph.hpp"
+#include "Heuristics.hpp"
 #include "common.hpp"
 #include "Timer.hpp"
 
@@ -19,6 +20,8 @@ struct Master {
     // pr stocker les preds dans le pcc 
     // pred_in_pcc[i] = {pred(i),candidat ajouté}
     std::vector<std::pair<int,int>> pred_in_pcc; 
+    
+    int SAA_value; 
 
     /* ATTRIBUTS RELATIFS AUX RÉSULTATS DE L'ALGORITHME */
 

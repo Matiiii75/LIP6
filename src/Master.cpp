@@ -4,6 +4,13 @@
 Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_data), SG(_data, _s, _t), time_limit(_time_limit)
 {
     master_time_data.start_timer(); // début du timer de Master 
+
+    Heuristics h(_data); 
+    double ideal_temp = h.init_temp(); // on détermine la température idéale 
+    h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
+    SAA_value = h.obj_val; // on récup la valeur calculée 
+    std::cout << "SAA value -> " << SAA_value << std::endl;
+
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
@@ -57,7 +64,25 @@ void Master::build_SG() {
 
         std::vector<int> C = SG.get_cand(C_ID); 
         std::unordered_set<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
+        
+        if(cut_set.size() > 5) {
+            // ELAGAGE -------------
+            int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
+            int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
+            
+            if(LB > SAA_value) {
 
+                iteration_count++; 
+                if(iteration_count%10000 == 0) {
+                    std::cout << "ELAGAGE DETECTÉ -> "; 
+                    std::cout << "LB = " << LB << " | UB = " << SAA_value; 
+                    std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
+                }
+                continue; // continuer au prochain élément de L 
+
+            }
+            // ELAGAGE -------------
+        }
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
     
