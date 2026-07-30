@@ -25,8 +25,8 @@ void run_param_comp_algo(Data& data) {
     int source = 0; 
     int puit = data.dag_size - 1; 
     double time_limit = 1200.00; 
-    Master prog(data, source, puit, time_limit);
 
+    Master prog(data, source, puit, time_limit);
     prog.build_SG(); // lancement de la construction de l'algorithme 
 
     if(prog.found_solution) {

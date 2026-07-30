@@ -69,8 +69,6 @@ struct Data {
     std::vector<std::vector<bool>> TC; // transitive closure du dag initial
     std::vector<keyHash> node_to_hash; // à chaque noeud du dag, on associe un hash 
 
-    std::vector<int> taille_blocages_hors_cut; // taille des blocages des sommets hors cut 
-
     /**
      * @brief constructeur de Data : initialise les données du pb, 
      * comme dag, reverse_dag, transitive closure etc.. à partir d'un instance 

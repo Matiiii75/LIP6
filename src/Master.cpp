@@ -14,6 +14,9 @@ Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_da
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
+
+    set_first_cand_LB2(); // on calcule LB2 POUR S = {}
+
 }
 
 
@@ -26,14 +29,24 @@ void Master::compute_cut_set(const std::vector<int>& cand, int& cut_set_size,
 
     for(const int c : cand) { // pr chq candidat 
         for(int i = 0; i < data.dag_size; ++i) { // pr chq noeud du graphe
-            if(data.TC[c][i]) {
+            if(data.TC[c][i] && cut_set[i]) { // si c->i && on a pas encore vu i 
                 cut_set[i] = 0; // si c -> i, i n'est pas dans le cut-set 
                 hors_cut_set.push_back(i); 
             }
-            else cut_set_size++;
         }
     }
 
+    cut_set_size = data.dag_size - (int)hors_cut_set.size(); 
+}
+
+
+void Master::set_first_cand_LB2() {
+
+    int first_cand_LB2 = 0; 
+    for(int u = 0; u < data.dag_size; ++u) 
+        first_cand_LB2 += SG.taille_blocages_hors_cut[u]; 
+    
+    this->lower_bounds_2[0] = first_cand_LB2; 
 }
 
 
@@ -122,7 +135,7 @@ int Master::compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const s
     int gamma = pred_in_pcc[C_ID].second; // récup le candidat ajouté entre C_pred et C 
     
     int C_pred_LB; 
-    auto it = lower_bounds_2.find(C_pred); // j'ai rajouté une sécurité d'existence ici 
+    auto it = lower_bounds_2.find(C_pred); // sécurité d'existence ici 
     if(it != lower_bounds_2.end()) C_pred_LB = it->second; // si on a trouvé une borne pour C_pred 
     else {throw std::runtime_error("Master::compute_C_LB2 -> C_pred_LB n'existe pas");}
 
@@ -133,10 +146,15 @@ int Master::compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const s
 }
 
 
-bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const {
+bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) {
+
+    if(C_ID == 0) return false; // C_ID = 0 -> il s'agit du first cand = {}
 
     int C_LB2 = compute_C_LB2(C_ID, cut_set, hors_cut_set); 
-    if(C_LB2 > SAA_value) return true; // on peut élaguer 
+    lower_bounds_2[C_ID] = C_LB2; // on mémorise la borne de C_ID
+    if(C_LB2 > SAA_value) {
+        return true; // on peut élaguer 
+    }
 
     return false; 
 }
@@ -169,8 +187,11 @@ void Master::build_SG() {
         
         // vérifier la borne LB2 
         if(try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
-        {
-            // coder l'élagage et les prints ... 
+        { 
+            iteration_count++; 
+            if(iteration_count % 10000 == 0)   
+                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            continue; 
         }
         
         std::vector<int> C2; 
