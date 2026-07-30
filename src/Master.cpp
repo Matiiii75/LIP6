@@ -159,7 +159,7 @@ bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, cons
 }
 
 
-void Master::build_SG() {
+void Master::build_SG() {   
 
     int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
     bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 
@@ -185,13 +185,13 @@ void Master::build_SG() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
-        { 
-            iteration_count++; 
-            if(iteration_count % 10000 == 0)   
-                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
-            continue; 
-        }
+        // if(try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        // { 
+        //     iteration_count++; 
+        //     if(iteration_count % 1 == 0)   
+        //         std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+        //     continue; 
+        // }
         
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
