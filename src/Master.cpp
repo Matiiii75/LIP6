@@ -63,7 +63,7 @@ int Master::compute_delta_LB2(int gamma, const std::vector<uint8_t>& cut_set,
         if(v == SG.t) continue; // ignorer le puit 
         if(data.TC[gamma][v] == 0) continue; // si gamma -/-> v : ignorer 
         for(int u : data.reverse_dag[v]) { // pr tt pred direct de v 
-            if(u == SG.s || cut_set[u] == 0 || seen[u]) continue; // ignorer source, u \in V-S ou u déjà vus 
+            if(u == SG.s || u == gamma || cut_set[u] == 0 || seen[u]) continue; // ignorer source, u \in V-S ou u déjà vus 
             ics_delta--; // si on arrive là -> alors on a trouvé un u dont le lambda(u) perd un élément (gamma)
             seen[u] = 1; // u a été vux
         }
