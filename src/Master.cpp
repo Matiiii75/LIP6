@@ -65,24 +65,24 @@ void Master::build_SG() {
         std::vector<int> C = SG.get_cand(C_ID); 
         std::unordered_set<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
         
-        // if(cut_set.size() > 5) {
-        //     // ELAGAGE -------------
-        //     int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
-        //     int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
+        if(cut_set.size() > 5) {
+            // ELAGAGE -------------
+            int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
+            int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
             
-        //     if(LB > SAA_value) {
+            if(LB > SAA_value) {
 
-        //         iteration_count++; 
-        //         if(iteration_count%10000 == 0) {
-        //             std::cout << "ELAGAGE DETECTÉ -> "; 
-        //             std::cout << "LB = " << LB << " | UB = " << SAA_value; 
-        //             std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
-        //         }
-        //         continue; // continuer au prochain élément de L 
+                iteration_count++; 
+                if(iteration_count%10000 == 0) {
+                    std::cout << "ELAGAGE DETECTÉ -> "; 
+                    std::cout << "LB = " << LB << " | UB = " << SAA_value; 
+                    std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
+                }
+                continue; // continuer au prochain élément de L 
 
-        //     }
-        //     // ELAGAGE -------------
-        // }
+            }
+            // ELAGAGE -------------
+        }
         
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
