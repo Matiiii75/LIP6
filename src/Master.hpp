@@ -23,6 +23,8 @@ struct Master {
     
     int SAA_value; 
 
+    std::unordered_map<int,int> lower_bounds_2; // dico qui associe a chaque C_ID sa LB2 si elle existe 
+
     /* ATTRIBUTS RELATIFS AUX RÉSULTATS DE L'ALGORITHME */
 
     std::vector<int> optimal_order; // contiendra l'ordre topologique optimal
@@ -45,12 +47,46 @@ struct Master {
     Master(const Data& _data, int _s, int _t, double _time_limit);
 
     /**
-     * @brief calcul le cut set associé à un ensemble candidat
+     * @brief calcule cut_set, hors_cut_set et la taille de cut_set (tous passés par référence)
      * @param cand candidat pour lequel on recherche le cut set 
-     * @return un vecteur de uint8_t valant 1 si l'indice est dans le cutset, 0 sinon 
+     * @param cut_set_size passé par référence, pour recupérer la taille du cut_set
+     * @param cut_set vecteur de 0/1 passé en référence
+     * @param hors_cut_set vecteur passé en référence qui contiendra les éléments d'hors-cut-set
      */
-    std::vector<uint8_t> compute_cut_set(const std::vector<int>& cand) const; 
+    void compute_cut_set(const std::vector<int>& cand, int& cut_set_size, 
+        std::vector<uint8_t>& cut_set, std::vector<int>& hors_cut_set) const; 
 
+    /**
+     * @brief Calcule la différence de LB2 entre deux sommets adjacents dans SG. 
+     * Le sommet de départ est définit par cut_set - {gamma} et le sommet d'arrivée par
+     * cut_set. 
+     * @param gamma c'est le candidat qu'on vient de faire rentrer dans cut_set
+     * @param cut_set c'est le cut_set associé au sommet d'arrivée 
+     * @param hors_cut_set vecteur contenant les éléments de V-S pr parcours par index + rapide
+     */
+    int compute_delta_LB2(int gamma, const std::vector<uint8_t>& cut_set, 
+        const std::vector<int>& hors_cut_set) const; 
+    
+    /**
+     * @brief Calcule la borne LB2 du sommet C_ID de SG. Il s'agit d'une version incrémentale qui se sert de la 
+     * borne LB2 calculé pour C_pred, le prédécesseur de C_ID dans SG (le sommet C_pred est celui d'où on vient
+     * dans SG pour avoir la meilleur valeur en C_ID). 
+     * @param C_ID id du sommet de SG pour lequel on calcule la borne
+     * @param cut_set le cut_set associé à l'ensemble candidat C_ID
+     * @param hors_cut_set un vecteur qui recence les éléments hors du cut set pour un parcours optimisé de ceux-ci
+     * @warning la borne inférieure LB2 de C_pred doit avoir été calculée
+     * @throw erreur si le predecesseur de C_ID n'as pas de borne LB2 enregistrée 
+     */
+    int compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const; 
+
+    /**
+     * @brief Lance le calcul de la borne LB2 et vérifie si un élagage est possible depuis le noeud C_ID. 
+     * @param C_ID noeud depuis lequel on élague
+     * @param cut_set cut-set associé à l'ensemble candidat C_ID
+     * @param hors_cut_set vecteur stockant les éléments hors-cut-set (parcours simplifié)
+     * @return true si on élague, false sinon 
+     */
+    bool try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const; 
 
     /**
      * @brief construit intégralement le graphe d'états SG 

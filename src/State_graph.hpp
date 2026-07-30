@@ -44,7 +44,7 @@ struct State_graph {
 
     std::vector<int> weights; // les poids de chaque ID de candidats (par index)
 
-    std::vector<int> taille_blocages_hors_cut; 
+    std::vector<int> taille_blocages_hors_cut; // c'est les Phi(u) dans mon rapport 
 
 
     State_graph(const Data& _data, int _s, int _t); 
