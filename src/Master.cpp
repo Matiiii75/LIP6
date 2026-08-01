@@ -1,22 +1,26 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_data), SG(_data, _s, _t), time_limit(_time_limit)
+Master::Master(const Data& _data, int _s, int _t, bool _enable_LB2_elaging, double _time_limit) : 
+    data(_data), SG(_data, _s, _t), enable_LB2_elaging(_enable_LB2_elaging), time_limit(_time_limit)
 {
-    master_time_data.start_timer(); // début du timer de Master 
 
-    Heuristics h(_data); 
-    double ideal_temp = h.init_temp(); // on détermine la température idéale 
-    h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
-    SAA_value = h.obj_val; // on récup la valeur calculée 
-    std::cout << "SAA value -> " << SAA_value << std::endl;
+    if(_enable_LB2_elaging) 
+    {
+        Heuristics h(_data); 
+        double ideal_temp = h.init_temp(); // on détermine la température idéale 
+        h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
+        SAA_value = h.obj_val; // on récup la valeur calculée 
+
+        set_first_cand_LB2(); // on calcule LB2 POUR S = {}
+        nb_elaged_branch_by_LB2 = 0; 
+    }
 
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
 
-    set_first_cand_LB2(); // on calcule LB2 POUR S = {}
-
+    master_time_data.start_timer(); // début du timer de Master 
 }
 
 
@@ -151,9 +155,8 @@ bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, cons
 
     int C_LB2 = compute_C_LB2(C_ID, cut_set, hors_cut_set); 
     lower_bounds_2[C_ID] = C_LB2; // on mémorise la borne de C_ID
-    if(C_LB2 > SAA_value) {
+    if(C_LB2 > SAA_value) 
         return true; // on peut élaguer 
-    }
 
     return false; 
 }
@@ -185,13 +188,14 @@ void Master::build_SG() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        // if(try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
-        // { 
-        //     iteration_count++; 
-        //     if(iteration_count % 1 == 0)   
-        //         std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
-        //     continue; 
-        // }
+        if(enable_LB2_elaging && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        { 
+            iteration_count++; 
+            if(iteration_count % 10000 == 0)   
+                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            nb_elaged_branch_by_LB2++; 
+            continue; 
+        }
         
         std::vector<int> C2; 
         C2.reserve(C.size()-1); // on réserve l'espace pour copier le C 
@@ -347,7 +351,12 @@ void Master::extract_results() {
 }
 
 
-void Master::display_results(bool display_opt_order, bool display_opt_val, bool hash_infos) const {
+void Master::display_results(
+    bool display_opt_order, 
+    bool display_opt_val, 
+    bool hash_infos,
+    bool display_LB2_elaging_infos
+) const {
 
     std::cout << "### Affichage résultats ###" << std::endl;
     std::cout << std::endl;
@@ -367,10 +376,17 @@ void Master::display_results(bool display_opt_order, bool display_opt_val, bool 
     std::cout << std::endl;
 
     if(hash_infos) {
-        std::cout << "nomre de hash généré : " << this->nb_hash_generated << std::endl;
+        std::cout << "nombre de hash généré : " << this->nb_hash_generated << std::endl;
         std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
     }
 
     std::cout << std::endl; 
+
+    if(display_LB2_elaging_infos && enable_LB2_elaging) {
+        std::cout << "nombre de sommets duquel démarre un élagage : ";
+        std::cout << this->nb_elaged_branch_by_LB2 << std::endl;
+    }
+
+    std::cout << std::endl;
 
 }

@@ -1,6 +1,6 @@
 # 1. Variables de configuration
 CXX = g++
-CXXFLAGS = -O3 -march=native -std=c++17 -Wall -Wextra # -fsanitize=address -g -Wall -Wextra -std=c++17
+CXXFLAGS = -O3 -g -march=native -std=c++17 -Wall -Wextra # -fsanitize=address -g -Wall -Wextra -std=c++17
 NAME = prog
 
 # 2. Liste des fichiers (À METTRE À JOUR QUAND TU AJOUTES UN FICHIER)

@@ -20,10 +20,12 @@ struct Master {
     // pr stocker les preds dans le pcc 
     // pred_in_pcc[i] = {pred(i),candidat ajouté}
     std::vector<std::pair<int,int>> pred_in_pcc; 
-    
-    int SAA_value; 
 
+    /* ATTRIBUTS RELATIFS A L'ÉLAGAGE & CALCUL DE BORNES */
+    int SAA_value; 
     std::unordered_map<int,int> lower_bounds_2; // dico qui associe a chaque C_ID sa LB2 si elle existe 
+    int nb_elaged_branch_by_LB2; 
+    bool enable_LB2_elaging; 
 
     /* ATTRIBUTS RELATIFS AUX RÉSULTATS DE L'ALGORITHME */
 
@@ -39,13 +41,22 @@ struct Master {
 
     /**
      * @brief constructeur de Master : établit une ref const vers data, 
-     *  initialise SG et ajoute l'ID du premier ens. candidats dans la FIFO 
+     *  initialise SG et ajoute l'ID du premier ens. candidats dans la FIFO. 
+     * Si un élagage quelconque est activé, lance recuit simulé et calcule la LB 
+     * du premier ensemble candidat de SG. 
      * @param _data Les données du pb pré-calculées 
      * @param _s le sommet de degré entrant 0 du dag initial
      * @param _t le sommet de degré sortant 0 du dag initial
      * @param _time_limit la limite de temps imposée par l'utilisateur 
+     * @param _enable_LB2 true si on active l'élagage avec LB2
      */
-    Master(const Data& _data, int _s, int _t, double _time_limit);
+    Master(
+        const Data& _data, 
+        int _s, 
+        int _t, 
+        bool _enable_LB2_elaging,
+        double _time_limit
+    );
 
 
     /**
@@ -138,7 +149,12 @@ struct Master {
      * - le nombre de hash générés 
      * - le nombre de candidats 
      */
-    void display_results(bool display_opt_order, bool display_opt_val, bool hash_infos) const; 
+    void display_results(
+        bool display_opt_order, 
+        bool display_opt_val, 
+        bool hash_infos,
+        bool display_LB2_elaging_infos
+    ) const; 
 
 }; 
 
