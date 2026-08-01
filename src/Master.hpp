@@ -22,6 +22,7 @@ struct Master {
     std::vector<std::pair<int,int>> pred_in_pcc; 
 
     /* ATTRIBUTS RELATIFS A L'ÉLAGAGE & CALCUL DE BORNES */
+    
     int SAA_value; 
     std::unordered_map<int,int> lower_bounds_2; // dico qui associe a chaque C_ID sa LB2 si elle existe 
     int nb_elaged_branch_by_LB2; 

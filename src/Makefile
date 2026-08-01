@@ -24,7 +24,7 @@ SRC = common.cpp \
       gen_graph.cpp \
       Timer.cpp \
       gurobi_modeles.cpp \
-      main_gurobi_modeles.cpp
+      main.cpp
 
 # 3. Transformation des .cpp en .o
 OBJ = $(SRC:.cpp=.o)
