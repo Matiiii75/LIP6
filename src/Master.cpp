@@ -1,49 +1,169 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t, double _time_limit) : data(_data), SG(_data, _s, _t), time_limit(_time_limit)
+Master::Master(const Data& _data, int _s, int _t, bool _enable_LB2_elaging, double _time_limit) : 
+    data(_data), SG(_data, _s, _t), enable_LB2_elaging(_enable_LB2_elaging), time_limit(_time_limit)
 {
-    master_time_data.start_timer(); // début du timer de Master 
 
-    Heuristics h(_data); 
-    double ideal_temp = h.init_temp(); // on détermine la température idéale 
-    h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
-    SAA_value = h.obj_val; // on récup la valeur calculée 
-    std::cout << "SAA value -> " << SAA_value << std::endl;
+    if(_enable_LB2_elaging) 
+    {
+        Heuristics h(_data); 
+        double ideal_temp = h.init_temp(); // on détermine la température idéale 
+        h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
+        SAA_value = h.obj_val; // on récup la valeur calculée 
+
+        set_first_cand_LB2(); // on calcule LB2 POUR S = {}
+        nb_elaged_branch_by_LB2 = 0; 
+    }
 
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
+
+    master_time_data.start_timer(); // début du timer de Master 
 }
 
 
-std::unordered_set<int> Master::compute_cut_set(const std::vector<int>& cand) const {
+void Master::compute_cut_set(const std::vector<int>& cand, int& cut_set_size,
+    std::vector<uint8_t>& cut_set, std::vector<int>& hors_cut_set) const {
 
-    std::unordered_set<int> cut_set; // comme on connait k, on peut allouer a l'avance !!
-    
-    // j'utilise un vecteur de bool où tout est faux au debut. 
-    // on va parcourir les N_G^+(cand) et mettre vrai a l'indice de ceux qui y sont
-    // ensuite, suffira d'inverser les valeurs de vérité. 
-    std::vector<bool> is_in_cut_set(data.dag_size, false); 
+    // On se rappelle que pour calculer le cut-set, il faut déterminer les éléments 
+    // qui sont pas dans N_G^+(cand). On met tous les éléments à 1. On parcours N_G^+(cand)
+    // grâce à la transitive closure et on met 0 pr chq sommet qu'on rencontre. 
 
     for(const int c : cand) { // pr chq candidat 
         for(int i = 0; i < data.dag_size; ++i) { // pr chq noeud du graphe
-            
-            if(data.TC[c][i]) is_in_cut_set[i] = true; // si c'est 1 dans la transitive closure -> true 
-
+            if(data.TC[c][i] && cut_set[i]) { // si c->i && on a pas encore vu i 
+                cut_set[i] = 0; // si c -> i, i n'est pas dans le cut-set 
+                hors_cut_set.push_back(i); 
+            }
         }
     }
 
-    for(int i = 0; i < data.dag_size; ++i) {
-        if(is_in_cut_set[i] == false) 
-            cut_set.insert(i); // si c'est faux, alors il est hors successeur, donc dans le cut set 
-    }
-
-    return cut_set; 
+    cut_set_size = data.dag_size - (int)hors_cut_set.size(); 
 }
 
 
-void Master::build_SG() {
+void Master::set_first_cand_LB2() {
+
+    int first_cand_LB2 = 0; 
+    for(int u = 0; u < data.dag_size; ++u) 
+        first_cand_LB2 += SG.taille_blocages_hors_cut[u]; 
+    
+    this->lower_bounds_2[0] = first_cand_LB2; 
+}
+
+
+int Master::compute_delta_LB2(int gamma, const std::vector<uint8_t>& cut_set, 
+    const std::vector<int>& hors_cut_set) const 
+{
+    // PARTIE IMPACT SUR ICS
+
+    // mémorisons les sommets de cut_set pr lesquels on a déja eliminé gamma de leur blocage 
+    std::vector<uint8_t> seen(data.dag_size, 0);
+    int ics_delta = 0; 
+
+    for(int v : hors_cut_set) { 
+        if(v == SG.t) continue; // ignorer le puit 
+        if(data.TC[gamma][v] == 0) continue; // si gamma -/-> v : ignorer 
+        for(int u : data.reverse_dag[v]) { // pr tt pred direct de v 
+            if(u == SG.s || u == gamma || cut_set[u] == 0 || seen[u]) continue; // ignorer source, u \in V-S ou u déjà vus 
+            ics_delta--; // si on arrive là -> alors on a trouvé un u dont le lambda(u) perd un élément (gamma)
+            seen[u] = 1; // u a été vux
+        }
+    }
+
+    // on a pas traité les u dans S qui sont pred direct de gamma (puisque v ne peut pas = gamma car gamma \in cut_set)
+    // deux cas peuvent se présenter : 
+    //  (1) -> ils ont d'autre succ direct hors-cut-set et gamma n'est pas sur un chemin vers eux : 
+    //        Alors, faire entrer gamma change la taille de lambda(u)
+    //  (2) -> ils ont que gamma comme succ hors-cut-set : 
+    //        Alors, faire entre gamma change la taille de lambda(u) de 1 à 0 et c'est déjà compté dans delta_pdscv
+
+    for(int u : data.reverse_dag[gamma]) {
+        if(u == SG.s || cut_set[u] == 0 || seen[u]) continue; 
+
+        // ici, on sait que gamma bloquait u, et qu'il ne le bloque plus. 
+        // dans le cas où gamma n'est pas le seul bloquant de u, alors u a au moins un autre succ direct 
+        // dans hors-cut-set. Et donc, ics_value--
+        // Mais, si gamma est le seul bloquant de u, alors la taille de lambda(u) passe de 1 à 0, 
+        // mais on ne doit pas décrément ics_value car c'est compté dans delta_pdscv
+
+        bool only_gamma_is_blocking = true; 
+        
+        for(int neigh_u : data.dag[u]) { // pr tt succ direct de u 
+            if(neigh_u == gamma) continue; 
+            if(cut_set[neigh_u] == 0) { // on a trouvé un autre bloquant de u hors cut set 
+                only_gamma_is_blocking = false; 
+                break; 
+            } 
+        }
+
+        if(only_gamma_is_blocking == false) {
+            ics_delta--; // on a trouvé un autre bloquant de u 
+        } 
+
+        seen[u] = 1; // on a vu u 
+    }
+
+    // PARTIE IMPACT SUR GAMMA (et donc HCS)
+
+    int hcs_delta = 0; 
+    hcs_delta -= SG.taille_blocages_hors_cut[gamma]; // hcs perd la participation de Phi(gamma)
+
+    // on calcule |lambda(gamma)| : 
+
+    int lambda_gamma = 0; 
+    for(int v : hors_cut_set) {
+        if(v == SG.t) continue; 
+        for(int w : data.dag[gamma]) {
+            if(w == SG.t || data.TC[v][w] == 0) continue; 
+            lambda_gamma++; 
+            break; // prochain v 
+        }
+    }
+    
+    if(lambda_gamma > 0) // si gamma admet un ensemble de blocage de taille > 0 
+        hcs_delta += lambda_gamma - 1; // lambda gamma participe a la borne
+    // on retire 1 car si gamma a au moins un successeur hors cut_set, 
+    // alors il est compté dans SG.weight[gamma] (delta_pdscv)
+
+    return ics_delta + hcs_delta;
+} 
+
+
+int Master::compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const {
+
+    int C_pred = pred_in_pcc[C_ID].first; // récup l'ID du prédécesseur optimal de C
+    int gamma = pred_in_pcc[C_ID].second; // récup le candidat ajouté entre C_pred et C 
+    
+    int C_pred_LB; 
+    auto it = lower_bounds_2.find(C_pred); // sécurité d'existence ici 
+    if(it != lower_bounds_2.end()) C_pred_LB = it->second; // si on a trouvé une borne pour C_pred 
+    else return SG.compute_LB2_from_C(cut_set, hors_cut_set, best_dist[C_ID]); 
+    // else {throw std::runtime_error("Master::compute_C_LB2 -> C_pred_LB n'existe pas");}
+
+    int delta_LB2 = compute_delta_LB2(gamma, cut_set, hors_cut_set);
+    int delta_pdscv = SG.weights[C_ID]; // le poids de C_ID, c'est exactement ce qu'on rajoute a pdscv lors de l'ajout de gamma 
+
+    return C_pred_LB + delta_pdscv + delta_LB2; // si delta_LB2 < 0, alors faire rentrer gamma en cut_set fait diminuer la borne
+}
+
+
+bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) {
+
+    if(C_ID == 0) return false; // C_ID = 0 -> il s'agit du first cand = {}
+
+    int C_LB2 = compute_C_LB2(C_ID, cut_set, hors_cut_set); 
+    lower_bounds_2[C_ID] = C_LB2; // on mémorise la borne de C_ID
+    if(C_LB2 > SAA_value) 
+        return true; // on peut élaguer 
+
+    return false; 
+}
+
+
+void Master::build_SG() {   
 
     int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
     bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 
@@ -63,25 +183,19 @@ void Master::build_SG() {
         L.pop(); // on l'efface 
 
         std::vector<int> C = SG.get_cand(C_ID); 
-        std::unordered_set<int> cut_set = compute_cut_set(C); // on calcule le cut_set associé
+        int cut_set_size = 0; // 0 par défaut, on va l'incrémenter comme il faut dans compute_cut_set() 
+        std::vector<uint8_t> cut_set(data.dag_size, 1); 
+        std::vector<int> hors_cut_set; 
+        compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
-        if(cut_set.size() > 5) {
-            // ELAGAGE -------------
-            int partial_dsc_value_C = best_dist[C_ID]; // on récup la meilleur dist jusqu'à C 
-            int LB = SG.compute_LB2_from_C(cut_set, partial_dsc_value_C); // on calcule la borne
-            
-            if(LB > SAA_value) {
-
-                iteration_count++; 
-                if(iteration_count%10000 == 0) {
-                    std::cout << "ELAGAGE DETECTÉ -> "; 
-                    std::cout << "LB = " << LB << " | UB = " << SAA_value; 
-                    std::cout << " | cut_set.size = " << cut_set.size() << std::endl;
-                }
-                continue; // continuer au prochain élément de L 
-
-            }
-            // ELAGAGE -------------
+        // vérifier la borne LB2 
+        if(enable_LB2_elaging && (cut_set_size > 25) && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        { 
+            iteration_count++; 
+            // if(iteration_count % 1000000 == 0)   
+            //     std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            nb_elaged_branch_by_LB2++; 
+            continue; 
         }
         
         std::vector<int> C2; 
@@ -95,7 +209,7 @@ void Master::build_SG() {
 
             int curr_c = C[i]; // copie c 
 
-            cut_set.insert(curr_c); // on étend le cut set au noeud candidat 
+            cut_set[curr_c] = 1; // le candidat rentre dans le cut-set 
 
             for(const int u : data.dag[curr_c]) { // (l.7) : pr chq succ u du candidat
 
@@ -134,8 +248,8 @@ void Master::build_SG() {
             }
 
             // on fini la boucle sur curr_c 
-            // -> on l'efface pour passer au prochain candidat 
-            cut_set.erase(curr_c); 
+            // -> on l'enlève du cut-set et passe au prochain candidat 
+            cut_set[curr_c] = 0; 
         }
 
     }
@@ -238,7 +352,12 @@ void Master::extract_results() {
 }
 
 
-void Master::display_results(bool display_opt_order, bool display_opt_val, bool hash_infos) const {
+void Master::display_results(
+    bool display_opt_order, 
+    bool display_opt_val, 
+    bool hash_infos,
+    bool display_LB2_elaging_infos
+) const {
 
     std::cout << "### Affichage résultats ###" << std::endl;
     std::cout << std::endl;
@@ -258,10 +377,17 @@ void Master::display_results(bool display_opt_order, bool display_opt_val, bool 
     std::cout << std::endl;
 
     if(hash_infos) {
-        std::cout << "nomre de hash généré : " << this->nb_hash_generated << std::endl;
+        std::cout << "nombre de hash généré : " << this->nb_hash_generated << std::endl;
         std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
     }
 
     std::cout << std::endl; 
+
+    if(display_LB2_elaging_infos && enable_LB2_elaging) {
+        std::cout << "nombre de sommets duquel démarre un élagage : ";
+        std::cout << this->nb_elaged_branch_by_LB2 << std::endl;
+    }
+
+    std::cout << std::endl;
 
 }

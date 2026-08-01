@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/Library/gurobi1302/macos_universal2/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

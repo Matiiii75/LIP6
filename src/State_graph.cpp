@@ -67,7 +67,7 @@ int State_graph::is_cand_in_SG(const std::vector<int>& cand, const keyHash& cand
 }
 
 
-int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::unordered_set<int>& cut_set) const {
+int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const {
 
     int K_weight = weights.at(K_ID); 
     // le ".at" lève une erreur si l'index K_ID n'existait pas (+ lent mais + safe)
@@ -155,21 +155,18 @@ void State_graph::compute_taille_blocages_hors_cut() {
 }
 
 
-int State_graph::compute_LB2_from_C(const std::unordered_set<int>& cut_set, int partial_dsc_value) {
-
-    std::unordered_set<int> hors_cut_set; 
-    for(int u = 0; u < data.dag_size; ++ u) { // remplir hors_cut_set 
-        if(u == s || u == t) continue; 
-        if(cut_set.count(u) > 0) continue; 
-        hors_cut_set.insert(u); 
-    }
+int State_graph::compute_LB2_from_C(
+    const std::vector<uint8_t>& cut_set, 
+    const std::vector<int>& hors_cut_set, 
+    int partial_dsc_value
+) const {
 
     int hcs_value = 0; 
     int ics_value = 0; 
 
     for(int u = 1; u < t; ++u) { // pr tt u \in V-{s,t}
         
-        if(cut_set.count(u) == 0) { // si il est pas dans le cut set 
+        if(cut_set[u] == 0) { // si il est pas dans le cut set 
             
             hcs_value += taille_blocages_hors_cut[u]; 
 
