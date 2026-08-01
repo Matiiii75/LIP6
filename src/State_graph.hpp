@@ -132,7 +132,11 @@ struct State_graph {
      * @param cut_set le cut_set depuis lequel on calcule LB2 
      * @warning cut_set contient la source et le puit. 
      */
-    int compute_LB2_from_C(const std::vector<uint8_t>& cut_set, int partial_dsc_value); 
+    int compute_LB2_from_C(
+        const std::vector<uint8_t>& cut_set, 
+        const std::vector<int>& hors_cut_set, 
+        int partial_dsc_value
+    ) const; 
 
 
     // méthode d'affichage de SG dans le terminal 

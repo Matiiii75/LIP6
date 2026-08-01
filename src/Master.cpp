@@ -140,7 +140,8 @@ int Master::compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const s
     int C_pred_LB; 
     auto it = lower_bounds_2.find(C_pred); // sécurité d'existence ici 
     if(it != lower_bounds_2.end()) C_pred_LB = it->second; // si on a trouvé une borne pour C_pred 
-    else {throw std::runtime_error("Master::compute_C_LB2 -> C_pred_LB n'existe pas");}
+    else return SG.compute_LB2_from_C(cut_set, hors_cut_set, best_dist[C_ID]); 
+    // else {throw std::runtime_error("Master::compute_C_LB2 -> C_pred_LB n'existe pas");}
 
     int delta_LB2 = compute_delta_LB2(gamma, cut_set, hors_cut_set);
     int delta_pdscv = SG.weights[C_ID]; // le poids de C_ID, c'est exactement ce qu'on rajoute a pdscv lors de l'ajout de gamma 
@@ -188,11 +189,11 @@ void Master::build_SG() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(enable_LB2_elaging && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(enable_LB2_elaging && (cut_set_size > 25) && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
-            if(iteration_count % 10000 == 0)   
-                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            // if(iteration_count % 1000000 == 0)   
+            //     std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
             nb_elaged_branch_by_LB2++; 
             continue; 
         }

@@ -155,14 +155,11 @@ void State_graph::compute_taille_blocages_hors_cut() {
 }
 
 
-int State_graph::compute_LB2_from_C(const std::vector<uint8_t>& cut_set, int partial_dsc_value) {
-
-    std::vector<int> hors_cut_set; 
-    for(int u = 0; u < data.dag_size; ++ u) { // remplir hors_cut_set 
-        if(u == s || u == t) continue; 
-        if(cut_set[u] == 1) continue; // si il est dans le cut-set -> ignorer  
-        hors_cut_set.push_back(u); 
-    }
+int State_graph::compute_LB2_from_C(
+    const std::vector<uint8_t>& cut_set, 
+    const std::vector<int>& hors_cut_set, 
+    int partial_dsc_value
+) const {
 
     int hcs_value = 0; 
     int ics_value = 0; 
