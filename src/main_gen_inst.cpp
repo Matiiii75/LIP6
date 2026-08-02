@@ -53,9 +53,20 @@ void gen_graphs_for_stats() {
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    gen_single_inst(50,0.079,0); 
+    if(argc != 4) {
+        std::cerr << "3 arguments (en plus du ./prog) attendus dans le main" << std::endl;
+    }
+
+    int n = atoi(argv[1]); 
+    double p = std::stod(argv[2]); 
+    int ID = atoi(argv[3]);
+    
+    std::cout << "p : " << p << std::endl;
+
+    gen_single_inst(n,p,ID);
+
     return 0; 
 }
 

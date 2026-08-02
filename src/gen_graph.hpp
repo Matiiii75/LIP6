@@ -19,7 +19,7 @@ struct Dag
     std::vector<std::bitset<5001>> TC; // transitive closure 
     
     // note pour le bitset<2001>. Plutôt que d'avoir une TC
-    // sous forme de matrice binaire, on a un vectuer de bitsets
+    // sous forme de matrice binaire, on a un vecteur de bitsets
     // qui sont des tableaux de bits (ici 2001) bits au plus
     // qui sont contigus en mémoire (gain massif de temps)
     // la taille des bit sets doit malheuresement être choisie a l'avance. 
@@ -45,6 +45,7 @@ struct Dag
     void compute_degenerascy(); 
 
     // génère aléatoirement un dag
+    // probabilité p d'existence d'arc (u,v) pr tt u,v 
     void gen_graph(double p); 
 
     // afficher les infos relatives au dag généré ainsi 

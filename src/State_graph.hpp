@@ -91,10 +91,9 @@ struct State_graph {
 
 
     /**
-     * @brief ajoute l'arc (C1,C2) d'un certain poids au graphe d'états 
+     * @brief ajoute l'arc (C1,C2) graphe d'états 
      * @param cand1_ID le sommet départ 
-     * @param cand2_ID le sommet arrivée 
-     * @param weight le poids de l'arc 
+     * @param cand2_ID le sommet arrivée  
      * @warning On doit avoir au préalable vérifié que cand1_ID et cand2_ID sont bien dans SG et ont bien le bon ID associé 
      */
     void add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID);   

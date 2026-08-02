@@ -34,13 +34,12 @@ class My_callbacks : public GRBCallback {
     private: 
 
     int puit; 
-    const std::vector<int>& all_nodes; 
     const std::vector<std::vector<GRBVar>>& z; 
     int nb_cuts_added; 
     
     public: 
 
-    My_callbacks(int _puit, const std::vector<int>& _all_nodes, const std::vector<std::vector<GRBVar>>& _z); // constructeur 
+    My_callbacks(int _puit, const std::vector<std::vector<GRBVar>>& _z); // constructeur 
 
     protected: 
 
@@ -50,7 +49,7 @@ class My_callbacks : public GRBCallback {
         int w; 
         violated_cut(int _u, int _v, int _w) : u(_u), v(_v), w(_w) {}
     }; 
-
+    
     void handle_approx(double& X) const; 
 
     void callback() override; // l'override est là pour dire au compilateur "hé, il s'agit de la déclaration d'une fonction qui existe dans la classe mère GRBCallback"

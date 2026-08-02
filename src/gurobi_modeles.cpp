@@ -298,7 +298,7 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on) {
 
         // instanciation callbacks 
 
-        My_callbacks Cb(puit, all_nodes, z); 
+        My_callbacks Cb(puit, z); 
 
         if(lazy_cuts_on) {
             model.set(GRB_IntParam_LazyConstraints, 1); 
@@ -339,8 +339,8 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on) {
 }
 
 
-My_callbacks::My_callbacks(int _puit, const std::vector<int>& _all_nodes, const std::vector<std::vector<GRBVar>>& _z) : 
-    puit(_puit), all_nodes(_all_nodes), z(_z), nb_cuts_added(0) {}
+My_callbacks::My_callbacks(int _puit, const std::vector<std::vector<GRBVar>>& _z) : 
+    puit(_puit), z(_z), nb_cuts_added(0) {}
 
 
 void My_callbacks::handle_approx(double& X) const 

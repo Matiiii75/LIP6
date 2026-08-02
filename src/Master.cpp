@@ -12,6 +12,8 @@ Master::Master(const Data& _data, int _s, int _t, bool _enable_LB2_elaging, doub
         h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
         SAA_value = h.obj_val; // on récup la valeur calculée 
 
+        std::cout << "SAA value -> " << SAA_value << std::endl; 
+
         set_first_cand_LB2(); // on calcule LB2 POUR S = {}
         nb_elaged_branch_by_LB2 = 0; 
     }
@@ -189,11 +191,11 @@ void Master::build_SG() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(enable_LB2_elaging && (cut_set_size > 25) && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(enable_LB2_elaging && (cut_set_size > 2) && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
-            // if(iteration_count % 1000000 == 0)   
-            //     std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            if(iteration_count % 1000 == 0)   
+                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
             nb_elaged_branch_by_LB2++; 
             continue; 
         }
