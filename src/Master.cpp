@@ -1,11 +1,11 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t, bool _enable_LB2_elaging, double _time_limit) : 
-    data(_data), SG(_data, _s, _t), enable_LB2_elaging(_enable_LB2_elaging), time_limit(_time_limit)
+Master::Master(const Data& _data, int _s, int _t, double _time_limit, bool _enable_LB2_elaging_DSC) : 
+    data(_data), SG(_data, _s, _t), time_limit(_time_limit), enable_LB2_elaging_DSC(_enable_LB2_elaging_DSC)
 {
 
-    if(_enable_LB2_elaging) 
+    if(_enable_LB2_elaging_DSC) 
     {
         Heuristics h(_data); 
         double ideal_temp = h.init_temp(); // on détermine la température idéale 
@@ -14,12 +14,12 @@ Master::Master(const Data& _data, int _s, int _t, bool _enable_LB2_elaging, doub
 
         std::cout << "SAA value -> " << SAA_value << std::endl; 
 
-        set_first_cand_LB2(); // on calcule LB2 POUR S = {}
-        nb_elaged_branch_by_LB2 = 0; 
+        set_first_cand_LB2_DSC(); // on calcule LB2 POUR S = {}
+        nb_elaged_branch_by_LB2_DSC = 0; 
     }
 
     L.push(0); // ajouter l'ID du premier candidat  
-    best_dist.push_back(0); // le coût pour aller au premier candidat est nul 
+    best_dist_DSC.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
 
     master_time_data.start_timer(); // début du timer de Master 
@@ -46,17 +46,90 @@ void Master::compute_cut_set(const std::vector<int>& cand, int& cut_set_size,
 }
 
 
-void Master::set_first_cand_LB2() {
+std::vector<int> Master::rebuild_opt_order() const {
+
+    std::vector<int> ordre_topo; 
+    int curr_node = (int)pred_in_pcc.size() - 1; // on récup le dernier ens candidat ( {t} )
+
+    while(curr_node != 0) {
+
+        ordre_topo.push_back(pred_in_pcc[curr_node].second); 
+        curr_node = pred_in_pcc[curr_node].first; 
+
+    }
+
+    std::reverse(ordre_topo.begin(), ordre_topo.end()); 
+    return ordre_topo; 
+}
+
+
+void Master::extract_results() {
+
+    this->optimal_order = rebuild_opt_order(); 
+    this->optimal_value = best_dist_DSC.back(); 
+
+    if(this->checker_DSC(this->optimal_order, this->optimal_value) == false) {
+        throw std::runtime_error("Master::checker_DSC -> solution non valide"); 
+    }
+
+    this->nb_hash_generated = SG.hash_to_ID.size(); 
+    this->nb_candidats = SG.ID_to_cands.size(); 
+
+}
+
+
+void Master::display_results(
+    bool display_opt_order, 
+    bool display_opt_val, 
+    bool hash_infos,
+    bool display_LB2_elaging_infos
+) const {
+
+    std::cout << "### Affichage résultats ###" << std::endl;
+    std::cout << std::endl;
+    
+    if(display_opt_order) {
+        std::cout << "Ordre topologique optimal : " << std::endl;
+        for(int i : this->optimal_order) 
+            std::cout << i << ", "; 
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+
+    if(display_opt_val) 
+        std::cout << "valeur optimale : " << this->optimal_value << std::endl;
+
+    std::cout << std::endl;
+
+    if(hash_infos) {
+        std::cout << "nombre de hash généré : " << this->nb_hash_generated << std::endl;
+        std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
+    }
+
+    std::cout << std::endl; 
+
+    if(display_LB2_elaging_infos && enable_LB2_elaging_DSC) {
+        std::cout << "nombre de sommets duquel démarre un élagage : ";
+        std::cout << this->nb_elaged_branch_by_LB2_DSC << std::endl;
+    }
+
+    std::cout << std::endl;
+
+}
+
+
+void Master::set_first_cand_LB2_DSC() {
 
     int first_cand_LB2 = 0; 
     for(int u = 0; u < data.dag_size; ++u) 
         first_cand_LB2 += SG.taille_blocages_hors_cut[u]; 
     
-    this->lower_bounds_2[0] = first_cand_LB2; 
+    this->lower_bounds_2_DSC[0] = first_cand_LB2; 
 }
 
 
-int Master::compute_delta_LB2(int gamma, const std::vector<uint8_t>& cut_set, 
+int Master::compute_delta_LB2_DSC(int gamma, const std::vector<uint8_t>& cut_set, 
     const std::vector<int>& hors_cut_set) const 
 {
     // PARTIE IMPACT SUR ICS
@@ -134,30 +207,29 @@ int Master::compute_delta_LB2(int gamma, const std::vector<uint8_t>& cut_set,
 } 
 
 
-int Master::compute_C_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const {
+int Master::compute_C_LB2_DSC(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) const {
 
     int C_pred = pred_in_pcc[C_ID].first; // récup l'ID du prédécesseur optimal de C
     int gamma = pred_in_pcc[C_ID].second; // récup le candidat ajouté entre C_pred et C 
     
     int C_pred_LB; 
-    auto it = lower_bounds_2.find(C_pred); // sécurité d'existence ici 
-    if(it != lower_bounds_2.end()) C_pred_LB = it->second; // si on a trouvé une borne pour C_pred 
-    else return SG.compute_LB2_from_C(cut_set, hors_cut_set, best_dist[C_ID]); 
-    // else {throw std::runtime_error("Master::compute_C_LB2 -> C_pred_LB n'existe pas");}
+    auto it = lower_bounds_2_DSC.find(C_pred); // sécurité d'existence ici 
+    if(it != lower_bounds_2_DSC.end()) C_pred_LB = it->second; // si on a trouvé une borne pour C_pred 
+    else return SG.compute_LB2_from_C_DSC(cut_set, hors_cut_set, best_dist_DSC[C_ID]); 
 
-    int delta_LB2 = compute_delta_LB2(gamma, cut_set, hors_cut_set);
+    int delta_LB2 = compute_delta_LB2_DSC(gamma, cut_set, hors_cut_set);
     int delta_pdscv = SG.weights[C_ID]; // le poids de C_ID, c'est exactement ce qu'on rajoute a pdscv lors de l'ajout de gamma 
 
     return C_pred_LB + delta_pdscv + delta_LB2; // si delta_LB2 < 0, alors faire rentrer gamma en cut_set fait diminuer la borne
 }
 
 
-bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) {
+bool Master::try_elaging_LB2_DSC(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set) {
 
     if(C_ID == 0) return false; // C_ID = 0 -> il s'agit du first cand = {}
 
-    int C_LB2 = compute_C_LB2(C_ID, cut_set, hors_cut_set); 
-    lower_bounds_2[C_ID] = C_LB2; // on mémorise la borne de C_ID
+    int C_LB2 = compute_C_LB2_DSC(C_ID, cut_set, hors_cut_set); 
+    lower_bounds_2_DSC[C_ID] = C_LB2; // on mémorise la borne de C_ID
     if(C_LB2 > SAA_value) 
         return true; // on peut élaguer 
 
@@ -165,7 +237,7 @@ bool Master::try_elaging_LB2(int C_ID, const std::vector<uint8_t>& cut_set, cons
 }
 
 
-void Master::build_SG() {   
+void Master::build_SG_DSC() {   
 
     int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
     bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 
@@ -191,12 +263,12 @@ void Master::build_SG() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(enable_LB2_elaging && (cut_set_size > 2) && try_elaging_LB2(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(enable_LB2_elaging_DSC && (cut_set_size > 2) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
             if(iteration_count % 1000 == 0)   
                 std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
-            nb_elaged_branch_by_LB2++; 
+            nb_elaged_branch_by_LB2_DSC++; 
             continue; 
         }
         
@@ -232,19 +304,19 @@ void Master::build_SG() {
                 SG.add_cand_to_SG(C2, C2_hash); 
                 C2_ID = (int)SG.ID_to_cands.size()-1; // on vient de l'ajouter, son ID est le dernier index 
                 L.push(C2_ID); // ajout à FIFO
-                int C2_weight = SG.compute_weight_C(C2_ID, C_ID, curr_c, cut_set); // cut_set est le cut-set de C2 
+                int C2_weight = SG.compute_weight_C_DSC(C2_ID, C_ID, curr_c, cut_set); // cut_set est le cut-set de C2 
                 SG.set_weight(C2_ID, C2_weight); // on calcule le poids de C2 
-                best_dist.push_back(std::numeric_limits<int>::max()); // inf par défaut 
+                best_dist_DSC.push_back(std::numeric_limits<int>::max()); // inf par défaut 
                 pred_in_pcc.push_back({-1,-1}); // ajout d'un sommet defaut pour garder pred_in_pcc bien indéxé 
 
             }
 
             SG.add_arc_from_C1_to_C2(C_ID, C2_ID); // ajoute l'arc 
             
-            int dist_from_C = best_dist[C_ID] + SG.weights[C2_ID]; 
-            if(best_dist[C2_ID] > dist_from_C) { // voir si on améliore le pcc jusqu'à C2 en passant par C 
+            int dist_from_C = best_dist_DSC[C_ID] + SG.weights[C2_ID]; 
+            if(best_dist_DSC[C2_ID] > dist_from_C) { // voir si on améliore le pcc jusqu'à C2 en passant par C 
                 
-                best_dist[C2_ID] = dist_from_C; 
+                best_dist_DSC[C2_ID] = dist_from_C; 
                 pred_in_pcc[C2_ID] = {C_ID, curr_c}; // retenir d'où on vient  
 
             }
@@ -259,23 +331,6 @@ void Master::build_SG() {
     if(stoped_prema == false) // si on a stoppé a cause du temps -> on a pas de solution à proposer 
         found_solution = true; 
 
-}
-
-
-std::vector<int> Master::rebuild_opt_order() const {
-
-    std::vector<int> ordre_topo; 
-    int curr_node = (int)pred_in_pcc.size() - 1; // on récup le dernier ens candidat ( {t} )
-
-    while(curr_node != 0) {
-
-        ordre_topo.push_back(pred_in_pcc[curr_node].second); 
-        curr_node = pred_in_pcc[curr_node].first; 
-
-    }
-
-    std::reverse(ordre_topo.begin(), ordre_topo.end()); 
-    return ordre_topo; 
 }
 
 
@@ -338,58 +393,3 @@ bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) cons
     return true; 
 }
 
-
-void Master::extract_results() {
-
-    this->optimal_order = rebuild_opt_order(); 
-    this->optimal_value = best_dist.back(); 
-
-    if(this->checker_DSC(this->optimal_order, this->optimal_value) == false) {
-        throw std::runtime_error("Master::checker_DSC -> solution non valide"); 
-    }
-
-    this->nb_hash_generated = SG.hash_to_ID.size(); 
-    this->nb_candidats = SG.ID_to_cands.size(); 
-
-}
-
-
-void Master::display_results(
-    bool display_opt_order, 
-    bool display_opt_val, 
-    bool hash_infos,
-    bool display_LB2_elaging_infos
-) const {
-
-    std::cout << "### Affichage résultats ###" << std::endl;
-    std::cout << std::endl;
-    
-    if(display_opt_order) {
-        std::cout << "Ordre topologique optimal : " << std::endl;
-        for(int i : this->optimal_order) 
-            std::cout << i << ", "; 
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-
-    if(display_opt_val) 
-        std::cout << "valeur optimale : " << this->optimal_value << std::endl;
-
-    std::cout << std::endl;
-
-    if(hash_infos) {
-        std::cout << "nombre de hash généré : " << this->nb_hash_generated << std::endl;
-        std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
-    }
-
-    std::cout << std::endl; 
-
-    if(display_LB2_elaging_infos && enable_LB2_elaging) {
-        std::cout << "nombre de sommets duquel démarre un élagage : ";
-        std::cout << this->nb_elaged_branch_by_LB2 << std::endl;
-    }
-
-    std::cout << std::endl;
-
-}

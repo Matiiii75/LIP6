@@ -26,8 +26,8 @@ void run_param_comp_algo(Data& data, bool enable_LB2_elaging) {
     int puit = data.dag_size - 1; 
     double time_limit = 1200.00; 
 
-    Master prog(data, source, puit, enable_LB2_elaging, time_limit);
-    prog.build_SG(); // lancement de la construction de l'algorithme 
+    Master prog(data, source, puit, time_limit, enable_LB2_elaging);
+    prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
 
     if(prog.found_solution) {
 

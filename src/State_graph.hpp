@@ -27,26 +27,26 @@ struct KeyEqual {
 
 struct State_graph {
 
+    // [----- ATTRIBUTS COMMUN A TOUT LES CRITÈRES -----] 
+
     const Data& data; // reférence constante vers un objet data passé au constructeur (évite copie)
-
     int s, t; // pour mémoriser les sommets source et puit qu'on a ajouté 
-
     std::vector<std::vector<int>> ID_to_cands; // associe à chaque ID son ensemble candidat 
-    
     // associe à chaque keyHash un ID 
     // on donne deux choses supplémentaires à l'unordered map pour qu'elle sache quoi faire : 
     // KeyHasher : lui permet de Hasher nos keyHash (qui est une structure perso)
     // KeyEqual : lui permet de comparer deux keyHash 
-
     std::unordered_map<keyHash, std::vector<int>, KeyHasher, KeyEqual> hash_to_ID; 
-
     std::vector<std::vector<int>> SG; // liste d'adjacence du state_graph
-
     std::vector<int> weights; // les poids de chaque ID de candidats (par index)
-
     std::vector<int> taille_blocages_hors_cut; // c'est les Phi(u) dans mon rapport 
 
+    // [----- MÉTHODES COMMUNES À TOUS LES CRITÈRES -----]
 
+    /**
+     * @brief créer SG. calcules le premier candidat ({s}), set son hash, et mets son poids à 0. 
+     * @note Fonctionne aussi bien pour DSC que CW car dans les deux cas w({s}) = 0 
+     */
     State_graph(const Data& _data, int _s, int _t); 
 
     /**
@@ -57,7 +57,6 @@ struct State_graph {
      */
     std::vector<int> compute_first_cand() const; 
 
-
     /**
      * @brief vérifie si un ensemble candidat est déja dans SG 
      * @param cand ensemble candidat à vérifier 
@@ -66,19 +65,6 @@ struct State_graph {
      * @warning cand doit être trié par ordre croissant
      */
     int is_cand_in_SG(const std::vector<int>& cand, const keyHash& cand_hash) const ; 
-
-
-    /**
-     * @brief calcule le poids des arcs sortant de l'ensemble candidats C 
-     *  par récurrence avec le poids d'un prédécesseur K 
-     * @param C_ID ID de l'ensemble candidat dont on calcule le poids des arcs sortant
-     * @param K_ID un prédécesseur de C_ID
-     * @param c le candidat de K qu'on a ajouté à S(C)
-     * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
-     * @return le poids 
-     */
-    int compute_weight_C(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const ; 
-
 
     /**
      * @brief ajoute un ensemble candidat au graphe d'états 
@@ -89,7 +75,6 @@ struct State_graph {
      */
     void add_cand_to_SG(const std::vector<int>& cand, const keyHash& cand_hash); 
 
-
     /**
      * @brief ajoute l'arc (C1,C2) graphe d'états 
      * @param cand1_ID le sommet départ 
@@ -97,7 +82,6 @@ struct State_graph {
      * @warning On doit avoir au préalable vérifié que cand1_ID et cand2_ID sont bien dans SG et ont bien le bon ID associé 
      */
     void add_arc_from_C1_to_C2(int cand1_ID, int cand2_ID);   
-
 
     /**
      * @brief getter qui renvoie l'ensemble candidat associé à un ID 
@@ -107,7 +91,6 @@ struct State_graph {
      */
     std::vector<int> get_cand(int ID) const; 
 
-
     /**
      * @brief set le poids d'un ID 
      * @param ID 
@@ -116,7 +99,6 @@ struct State_graph {
      */
     void set_weight(int ID, int w); 
 
-
     /**
      * @brief Cette fonction calcule la taille des ensembles de blocages hors cut set (Phi(u)) pour tout u \in V
      * @note la source et le puit auront une taille = 0 par défaut. Cette fonction doit être appelé avant de
@@ -124,6 +106,30 @@ struct State_graph {
      */
     void compute_taille_blocages_hors_cut(); 
 
+    // méthode d'affichage de SG dans le terminal 
+    void display_SG() const; 
+
+    // méthode d'affichage de SG avec les relations entre ensembles 
+    void display_SG_detail() const; 
+
+    // afficher les poids de chaque ensemble candidat
+    void display_weights() const; 
+
+    // affiche les tailles des ensembles de blocages hors cut set 
+    void display_tailles_blocages_hors_cut() const; 
+
+    // [----- MÉTHODES PROPRES AUX CRITÈRES -----]
+
+    /**
+     * @brief calcule le poids des arcs sortant de l'ensemble candidats C 
+     *  par récurrence avec le poids d'un prédécesseur K pour le critère DSC 
+     * @param C_ID ID de l'ensemble candidat dont on calcule le poids des arcs sortant
+     * @param K_ID un prédécesseur de C_ID
+     * @param c le candidat de K qu'on a ajouté à S(C)
+     * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
+     * @return le poids 
+     */
+    int compute_weight_C_DSC(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const ; 
 
     /**
      * @brief Calcule la borne inférieure LB2. Celle-ci sert a évaluer si continuer à étendre SG depuis 
@@ -131,27 +137,11 @@ struct State_graph {
      * @param cut_set le cut_set depuis lequel on calcule LB2 
      * @warning cut_set contient la source et le puit. 
      */
-    int compute_LB2_from_C(
+    int compute_LB2_from_C_DSC(
         const std::vector<uint8_t>& cut_set, 
         const std::vector<int>& hors_cut_set, 
         int partial_dsc_value
     ) const; 
-
-
-    // méthode d'affichage de SG dans le terminal 
-    void display_SG() const; 
-
-
-    // méthode d'affichage de SG avec les relations entre ensembles 
-    void display_SG_detail() const; 
-
-
-    // afficher les poids de chaque ensemble candidat
-    void display_weights() const; 
-
-
-    // affiche les tailles des ensembles de blocages hors cut set 
-    void display_tailles_blocages_hors_cut() const; 
 
 }; 
 

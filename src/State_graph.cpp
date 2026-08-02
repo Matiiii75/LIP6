@@ -6,11 +6,7 @@ State_graph::State_graph(const Data& _data, int _s, int _t) : data(_data), s(_s)
 
     compute_taille_blocages_hors_cut(); // on calcule les tailles d'ens de blocages pr tt u \in V-{s,t}
 
-    // ajouter le premier sommet à SG, 
-    // il s'agit de l'ensemble des successeurs de s 
-    // (l.1 - algo 1)
-
-    std::vector<int> first_cand; // ALLOUER K D'ESPACE MAX ?? 
+    std::vector<int> first_cand; // ajouter le premier sommet à SG, 
     first_cand = compute_first_cand();  
     
     keyHash first_cand_hash; // calculer le hash de first_cand 
@@ -64,35 +60,6 @@ int State_graph::is_cand_in_SG(const std::vector<int>& cand, const keyHash& cand
     }
 
     return -1; 
-}
-
-
-int State_graph::compute_weight_C(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const {
-
-    int K_weight = weights.at(K_ID); 
-    // le ".at" lève une erreur si l'index K_ID n'existait pas (+ lent mais + safe)
-    // on le garde pr la version expérimentale. 
-
-    assert(C_ID >= 0 && C_ID < (int)ID_to_cands.size()); // précautions anti dépassement 
-    assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
-
-    // on fait des alias sur les deux ensembles candidats 
-    // const std::vector<int>& K = ID_to_cands[K_ID]; 
-    // const std::vector<int>& C = ID_to_cands[C_ID]; 
-
-    int C_weight = K_weight; // (l.3 - algo 2)
-
-    for(int u : data.reverse_dag[c]) { // pr tout pred de c
-        if(u == s) continue; // si c'est la source, on ignore 
-        if(is_included(data.dag[u], cut_set, t))
-            --C_weight; 
-    }
-
-    if(is_disjoint(data.dag[c], t, cut_set)) { // (l.7,8 - algo 2)
-        ++C_weight; 
-    }
-
-    return C_weight; 
 }
 
 
@@ -152,47 +119,6 @@ void State_graph::compute_taille_blocages_hors_cut() {
         }
     }
 
-}
-
-
-int State_graph::compute_LB2_from_C(
-    const std::vector<uint8_t>& cut_set, 
-    const std::vector<int>& hors_cut_set, 
-    int partial_dsc_value
-) const {
-
-    int hcs_value = 0; 
-    int ics_value = 0; 
-
-    for(int u = 1; u < t; ++u) { // pr tt u \in V-{s,t}
-        
-        if(cut_set[u] == 0) { // si il est pas dans le cut set 
-            
-            hcs_value += taille_blocages_hors_cut[u]; 
-
-        } else { // si il est dans le cut_set 
-
-            int blocage_u_size = 0; // pr savoir exactement combien d'éléments bloquent u
-            for(int w : hors_cut_set) { // (t n'est pas dedans)
-                for(int v : data.dag[u]) {
-                    if(v == t) continue; 
-                    if(!data.TC[w][v]) continue; // si w -/-> v
-                    blocage_u_size++; // w compte dans le blocage de u 
-                    break; // aller au prochain w
-                }
-            }
-
-            if(blocage_u_size > 0) // on retire 1 car si u a au moins un successeur hors cut set, 
-                ics_value += blocage_u_size - 1; // on l'aura compté dans partial_dsc_value 
-        }
-
-    }
-
-    // std::cout << "ics = " << ics_value << " | "; 
-    // std::cout << "hcs = " << hcs_value << " | "; 
-    // std::cout << "pdscv = " << partial_dsc_value << std::endl;
-
-    return partial_dsc_value + hcs_value + ics_value; 
 }
 
 
@@ -264,5 +190,71 @@ void State_graph::display_tailles_blocages_hors_cut() const {
         std::cout << u << " -> " << taille_blocages_hors_cut[u] << std::endl;
     }
 
+}
+
+
+int State_graph::compute_weight_C_DSC(int C_ID, int K_ID, int c, const std::vector<uint8_t>& cut_set) const {
+
+    int K_weight = weights.at(K_ID); 
+    // le ".at" lève une erreur si l'index K_ID n'existait pas (+ lent mais + safe)
+    // on le garde pr la version expérimentale. 
+
+    assert(C_ID >= 0 && C_ID < (int)ID_to_cands.size()); // précautions anti dépassement 
+    assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
+
+    // on fait des alias sur les deux ensembles candidats 
+    // const std::vector<int>& K = ID_to_cands[K_ID]; 
+    // const std::vector<int>& C = ID_to_cands[C_ID]; 
+
+    int C_weight = K_weight; // (l.3 - algo 2)
+
+    for(int u : data.reverse_dag[c]) { // pr tout pred de c
+        if(u == s) continue; // si c'est la source, on ignore 
+        if(is_included(data.dag[u], cut_set, t))
+            --C_weight; 
+    }
+
+    if(is_disjoint(data.dag[c], t, cut_set)) { // (l.7,8 - algo 2)
+        ++C_weight; 
+    }
+
+    return C_weight; 
+}
+
+
+int State_graph::compute_LB2_from_C_DSC(
+    const std::vector<uint8_t>& cut_set, 
+    const std::vector<int>& hors_cut_set, 
+    int partial_dsc_value
+) const {
+
+    int hcs_value = 0; 
+    int ics_value = 0; 
+
+    for(int u = 1; u < t; ++u) { // pr tt u \in V-{s,t}
+        
+        if(cut_set[u] == 0) { // si il est pas dans le cut set 
+            
+            hcs_value += taille_blocages_hors_cut[u]; 
+
+        } else { // si il est dans le cut_set 
+
+            int blocage_u_size = 0; // pr savoir exactement combien d'éléments bloquent u
+            for(int w : hors_cut_set) { // (t n'est pas dedans)
+                for(int v : data.dag[u]) {
+                    if(v == t) continue; 
+                    if(!data.TC[w][v]) continue; // si w -/-> v
+                    blocage_u_size++; // w compte dans le blocage de u 
+                    break; // aller au prochain w
+                }
+            }
+
+            if(blocage_u_size > 0) // on retire 1 car si u a au moins un successeur hors cut set, 
+                ics_value += blocage_u_size - 1; // on l'aura compté dans partial_dsc_value 
+        }
+
+    }
+
+    return partial_dsc_value + hcs_value + ics_value; 
 }
 
