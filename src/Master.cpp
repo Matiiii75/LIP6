@@ -4,6 +4,7 @@
 Master::Master(const Data& _data, int _s, int _t, double _time_limit, bool _enable_LB2_elaging_DSC) : 
     data(_data), SG(_data, _s, _t), time_limit(_time_limit), enable_LB2_elaging_DSC(_enable_LB2_elaging_DSC)
 {
+    master_time_data.start_timer(); // début du timer de Master
 
     if(_enable_LB2_elaging_DSC) 
     {
@@ -21,8 +22,6 @@ Master::Master(const Data& _data, int _s, int _t, double _time_limit, bool _enab
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist_DSC.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
-
-    master_time_data.start_timer(); // début du timer de Master 
 }
 
 
@@ -79,42 +78,59 @@ void Master::extract_results() {
 
 
 void Master::display_results(
+    bool display_inst_name,
+    bool display_n_and_k,  
     bool display_opt_order, 
+    bool display_time, 
     bool display_opt_val, 
     bool hash_infos,
     bool display_LB2_elaging_infos
 ) const {
 
-    std::cout << "### Affichage résultats ###" << std::endl;
+    std::cout << "-------------------------------------------------------------------------"; 
     std::cout << std::endl;
-    
+
+    std::cout << "               [----- AFFICHAGES RÉSULTATS -----]" << std::endl;
+    std::cout << std::endl;
+
+    if(display_inst_name) {
+        std::cout << "[Instance]              : " << this->data.instance_name << std::endl;
+    }
+
+    if(display_n_and_k) {
+        std::cout << "[Dag size & Degeneracy] : "; 
+        std::cout << this->data.dag_size << " / "; 
+        std::cout << this->data.degenerascy << std::endl;
+    }
+
     if(display_opt_order) {
-        std::cout << "Ordre topologique optimal : " << std::endl;
+        std::cout << "[Ordre topologique optimal] : " << std::endl;
         for(int i : this->optimal_order) 
             std::cout << i << ", "; 
         std::cout << std::endl;
     }
 
-    std::cout << std::endl;
-
-    if(display_opt_val) 
-        std::cout << "valeur optimale : " << this->optimal_value << std::endl;
-
-    std::cout << std::endl;
-
-    if(hash_infos) {
-        std::cout << "nombre de hash généré : " << this->nb_hash_generated << std::endl;
-        std::cout << "nombre de candidats : " << this->nb_candidats << std::endl;
+    if(display_time) {
+        std::cout << "[Temps total]           : "; 
+        std::cout << this->total_time << " sec" << std::endl;
     }
 
-    std::cout << std::endl; 
+    if(display_opt_val) 
+        std::cout << "[valeur optimale]       : " << this->optimal_value << std::endl;
+
+
+    if(hash_infos) {
+        std::cout << "[nombre de hash généré] : " << this->nb_hash_generated << std::endl;
+        std::cout << "[nombre de candidats]   : " << this->nb_candidats << std::endl;
+    }
 
     if(display_LB2_elaging_infos && enable_LB2_elaging_DSC) {
-        std::cout << "nombre de sommets duquel démarre un élagage : ";
+        std::cout << "[nombre de sommets duquel démarre un élagage] : ";
         std::cout << this->nb_elaged_branch_by_LB2_DSC << std::endl;
     }
 
     std::cout << std::endl;
+    std::cout << "-------------------------------------------------------------------------"; 
 
 }
 
@@ -331,6 +347,7 @@ void Master::build_SG_DSC() {
     if(stoped_prema == false) // si on a stoppé a cause du temps -> on a pas de solution à proposer 
         found_solution = true; 
 
+    this->total_time = master_time_data.get_temps_passe(); // on récupère le temps total de l'algorithme. 
 }
 
 

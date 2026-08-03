@@ -19,7 +19,7 @@ void run_SAA(Data& data) {
 // affiche l'ordre topo optimal, la valeur associée, check la validité 
 // et affiche le nombre de sommets de SGG généré, ainsi que le nombre de hash différents 
 // n'écrit rien dans un fichier 
-void run_param_comp_algo(Data& data, bool enable_LB2_elaging) {
+void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging) {
 
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     int source = 0; 
@@ -31,23 +31,58 @@ void run_param_comp_algo(Data& data, bool enable_LB2_elaging) {
 
     if(prog.found_solution) {
 
-        prog.extract_results(); 
-    
+        prog.extract_results();
+        
+        bool display_inst_name = true; 
+        bool display_n_and_k = true; 
         bool display_opt_order = false; 
+        bool display_time = true; 
         bool display_opt_val = true; 
         bool display_hash_infos = true; 
         bool display_LB2_elaging_infos = true; 
 
         prog.display_results( // affichage du résultat 
+            display_inst_name,
+            display_n_and_k, 
             display_opt_order,
+            display_time, 
             display_opt_val,
             display_hash_infos,
             display_LB2_elaging_infos
         ); 
 
+        if(write_results) { // écriture dans un fichier 
+
+            write_main_infos(
+                prog.data.instance_name,
+                prog.data.dag_size, 
+                prog.data.degenerascy, 
+                prog.optimal_value, 
+                prog.total_time,
+                prog.nb_candidats
+            );
+
+        }
+
     } else {
 
         std::cout << "Arrêt algorithme : time_limit excedée" << std::endl;
+
+        if(write_results) { // si on souhaite écrire dans un fichier 
+
+            int optimal_value = -1; 
+            int nb_candidats = prog.SG.ID_to_cands.size(); // on récup la taille de SG lors de l'arrêt
+
+            write_main_infos(
+                prog.data.instance_name, 
+                prog.data.dag_size, 
+                prog.data.degenerascy, 
+                optimal_value, 
+                prog.total_time, 
+                nb_candidats
+            );
+
+        }
 
     }
 
@@ -59,166 +94,46 @@ void run_param_comp_algo(Data& data, bool enable_LB2_elaging) {
 // arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
 //          1 si on lance juste le SAA 
 //          2 si on lance SAA + algo complexité paramétrée 
-// ---> N'écrit pas de résultats dans un .txt <---
+// arg 3 -> 0 si on active l'élagage avec la borne LB2 
+//          1 sinon
+// arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
+//          1 si on active 
 int main(int argc, char* argv[]) {
 
-    if(argc != 4) 
+    if(argc != 5) 
         throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
 
     std::string file = argv[1]; 
     int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
     int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
+    int writing_results = atoi(argv[4]); // 0 -> pas d'écritures dans le fichier results | 1 -> écritures activées 
 
-    Timer tm; 
-    tm.start_timer(); 
+    if(mode_execution != 0 && mode_execution != 1 && mode_execution != 2) // gestions erreurs arguments 
+        throw std::runtime_error("mode_execution (main argument) doit être 0,1 ou 2"); 
+    if(elaging_LB2_choice != 0 && elaging_LB2_choice != 1)
+        throw std::runtime_error("elaging_LB2_choice (main argument) doit être 0 ou 1"); 
+    if(writing_results != 0 && writing_results != 1)
+        throw std::runtime_error("Writing results (main argument) doit être 0 ou 1"); 
 
     Data data(file); 
 
-    double data_import_time = tm.get_temps_passe(); // récupère le temps requis pour gérer les data 
-
     switch (mode_execution) 
     {
-        case 0: // lancement algo complexité param 
-            run_param_comp_algo(data, elaging_LB2_choice); 
+        case 0: // lancement algo complexité param  
+            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
             break; 
         case 1: // lancement SAA seul 
             run_SAA(data);
             break;  
         case 2: // lancement SAA + algo complexité param
             run_SAA(data); 
-            run_param_comp_algo(data, elaging_LB2_choice); 
+            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
             break; 
         default: 
             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
     }
 
-    double temps_total = tm.get_temps_passe();
-    double temps_generation_SG = temps_total - data_import_time; 
-    std::cout << "temps total -> " << temps_total << std::endl;
-    std::cout << "temps gestion des data -> " << data_import_time << std::endl;
-    std::cout << "temps passé dans la génération du graphe d'états -> " << temps_generation_SG; 
-    std::cout << std::endl;
-
     return 0; 
 }
 
-#include <filesystem> // pr gérer la recherche dans un dossier du pc (C++17)
-#include <sstream>
-
-// on lui donne un nom d'instance
-// il extrait la degen du nom et la renvoie
-int extrait_degen(const std::string& inst) {
-
-    std::stringstream ss(inst); 
-    std::string morceau; 
-
-    std::getline(ss,morceau,'_'); // extrait la valeur de n
-    std::getline(ss,morceau,'_'); // extrait 'n'
-    std::getline(ss,morceau,'_'); // extrait la valeur de k
-    
-    int k = std::stoi(morceau); 
-    
-    return k; 
-}
-
-// trie les noms d'instances par ordre croissant de la degeneracy 
-void trie_instances_degen_croissante(std::vector<std::string>& instances) {
-
-    std::sort(instances.begin(), instances.end(),
-        [](const std::string& a, const std::string& b)
-    {
-        return extrait_degen(a) < extrait_degen(b); 
-    });
-
-}
-
-// un main qui lance les instances automatiquement pour une degen = 50 
-// ATTENTION : écrit les données récoltées dans un fichier !!!!!!
-// int main_bis() {
-
-//     int degen_max = 50; 
-
-//     std::filesystem::path chemin = "../instances/k_variations/"; 
-//     std::vector<std::string> content_folder; 
-
-//     for(const auto& entree : std::filesystem::directory_iterator(chemin))  {
-//         if(entree.path().filename().string() == ".DS_Store") continue; 
-//         content_folder.push_back(entree.path().filename().string());
-//     }
-         
-
-//     trie_instances_degen_croissante(content_folder); 
-
-//     // Execution de l'algorithme pour chaque instance 
-
-//     for(auto inst : content_folder) {
-
-//         if(extrait_degen(inst) > degen_max) continue; // ignore les instances de trop grande degen
-
-//         std::cout << inst << " -> "; 
-
-//         // débuter le minuteur 
-//         Timer tm; 
-//         tm.start_timer(); 
-
-//         // lire la data 
-//         std::string path_to_isnt = "../instances/k_variations/" + inst; 
-//         Data data(path_to_isnt); 
-
-//         // lancer l'execution pour l'instance 
-//         int source = 0; 
-//         int puit = data.dag_size - 1; 
-//         double time_limit = 1200.00; // time limit de 20 minutes 
-//         Master prog(data, source, puit, time_limit); 
-
-//         prog.build_SG(); 
-        
-//         int val_opt = -1; 
-//         int nb_nodes_SG = -1;
-//         double total_time = tm.get_temps_passe(); 
-
-//         if(prog.found_solution) // si on a eu le time de trouver une solution 
-//         { 
-//             prog.extract_results(); // on extrait les résultats
-//             val_opt = prog.optimal_value; 
-//             nb_nodes_SG = prog.nb_candidats;  
-//         } 
-
-//         write_main_infos(inst, val_opt, total_time, nb_nodes_SG);
-        
-//         std::cout << "val : " << val_opt << " | time : " << total_time << " | number nodes in SG : " << nb_nodes_SG << std::endl;
-
-//     }
-
-//     return 0; 
-// }
-
-
-// petit main pour gérer l'écriture des résultats de SAA dans un fichier texte 
-// int main2() {
-
-//     // commencer par stocker tous les fichiers dans le dossier d'instances
-//     std::filesystem::path chemin = "../inst/"; 
-//     std::vector<std::string> content_folder; 
-   
-//     for(const auto& entree : std::filesystem::directory_iterator(chemin)) 
-//         content_folder.push_back(entree.path().filename().string()); 
-    
-//     // puis, ouvrir fichier d'écriture 
-//     std::ofstream writing("../SAA_infs.txt"); 
-
-//     for(const std::string& inst : content_folder)
-//     {   
-//         if(inst == ".DS_Store") continue; 
-//         std::cout << "traitement de " << inst << std::endl; 
-//         std::string path = "../inst/" + inst; 
-//         Data data(path); // lire l'instance 
-//         Heuristics h(data); // lancer SAA 
-//         h.SAA_optimize(1000, 100); // avec temp = 1000 et palier = 100
-//         writing << inst << " " << h.obj_val << std::endl; // écrire la donnée 
-//     }
-
-//     writing.close(); 
-//     return 0; 
-// }
 

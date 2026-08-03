@@ -56,14 +56,19 @@ void display_FIFO(std::queue<int> Q);
 // fonction qui tire un entier aléatoire dans [a,b]
 int random_int(int a, int b, std::mt19937& gen); 
 
+// prend en entrée un chemin jusqu'à une instance et ressort juste le nom de l'instance 
+std::string getFileName(const std::string& path); 
+
 
 /**
  * @brief Ecrit les données obtenues par l'algo de complexité paramétrée
  * dans un fichier texte dans : "results/data_main.txt"
  * @param inst le nom de l'instance 
+ * @param dag_size taille du dag
+ * @param degeneracy degeneracy du graphe de co-comparabilité du dag
  * @param val_opt la valeur optimale
  * @param time le temps total nécéssité (calcul TC + main algo)
  * @param nb_nodes_SG le nombre de sommets dans le graphe d'états construit 
  */
-void write_main_infos(const std::string& inst, int val_opt, double time, int nb_nodes_SG); 
+void write_main_infos(const std::string& inst, int dag_size, int degeneracy, int val_opt, double time, int nb_nodes_SG); 
 

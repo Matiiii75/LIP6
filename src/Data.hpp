@@ -10,6 +10,7 @@
 #include <algorithm> 
 #include <queue>
 #include <cassert>
+#include "common.hpp"
 
 using Dag = std::vector<std::vector<int>>;
 
@@ -58,6 +59,8 @@ keyHash compute_cand_hash(const std::vector<int>& cand, const std::vector<keyHas
 
 
 struct Data {
+
+    std::string instance_name; 
 
     Dag dag; // dag initial
     Dag reverse_dag; // reverse_dag (on inverse le sens des arcs)

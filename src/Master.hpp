@@ -23,10 +23,11 @@ struct Master {
     std::vector<int> optimal_order; // contiendra l'ordre topologique optimal
     int optimal_value; // contiendra la valeur optimale associée à l'ordre optimal calculé
     int nb_hash_generated; 
-    int nb_candidats; 
+    int nb_candidats; // 
     double time_limit; // limite choisie par l'utilisateur 
     Timer master_time_data; // permettra de vérifier que l'algorithme ne mets pas trop de temps 
     bool found_solution = false; // indique si on a trouvé une solution (faux par défaut)
+    double total_time; 
 
     // [----- ATTRIBUTS PROPRES AUX CRITÈRES -----]
  
@@ -89,7 +90,10 @@ struct Master {
      * - le nombre de candidats 
      */
     void display_results(
-        bool display_opt_order, 
+        bool display_inst_name,
+        bool display_n_and_k,  
+        bool display_opt_order,
+        bool display_time,  
         bool display_opt_val, 
         bool hash_infos,
         bool display_LB2_elaging_infos

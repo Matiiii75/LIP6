@@ -92,10 +92,19 @@ int random_int(int a, int b, std::mt19937& gen)
 }
 
 
-void write_main_infos(const std::string& inst, int val_opt, double time, int nb_nodes_SG) {
+std::string getFileName(const std::string& path) {
+
+    size_t lastSlash = path.find_last_of("/\\"); // compatible mac/linux
+    return (lastSlash == std::string::npos) ? path : path.substr(lastSlash + 1);
+
+}
+
+
+void write_main_infos(const std::string& inst, int dag_size, int degeneracy, int val_opt, double time, int nb_nodes_SG) {
 
     std::ofstream writing("../results/results_main_algo.txt", std::ios::app); 
-    writing << inst << " " << val_opt << " " << nb_nodes_SG << " " << time << std::endl;
+    writing << inst << " " << dag_size << " " << degeneracy << " "; 
+    writing << val_opt << " " << nb_nodes_SG << " " << time << std::endl;
     writing.close(); 
 
 }

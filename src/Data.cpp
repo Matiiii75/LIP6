@@ -53,6 +53,8 @@ keyHash compute_cand_hash(const std::vector<int>& cand, const std::vector<keyHas
 
 Data::Data(const std::string& file) {
 
+    instance_name = getFileName(file); 
+
     std::ifstream f(file); 
     
     if(!f.is_open()) 
