@@ -313,7 +313,7 @@ def generate_instance(
 # 6. Écriture fichier (mêmes conventions que Dag::write_in_file)
 # ---------------------------------------------------------------------------
 
-def write_instance(adj: list[list[int]], d_obtenue: int, ID: str, output_dir: str = "../instances/test_gen_exact") -> str:
+def write_instance(adj: list[list[int]], d_obtenue: int, ID: str, output_dir: str = "../instances") -> str:
     """
     Écrit l'instance au format :
         nb_nodes nb_arcs degenerescence
@@ -346,8 +346,10 @@ def genere_cluster_instances():
     de même paramètres avec des ID différents. 
     """
 
-    tailles = [50,100,200,500]
-    k_degens = [5,10,15,20,25,30,35,40]
+    # tailles = [50,100,200,500,1000,1500,2000]
+    # k_degens = [5,10,15,20,25,30,35,40]
+    tailles = [1000,1500,2000]
+    k_degens = [25,30]
     IDs = [i for i in range(1,11)]
 
     max_attempts = 30
@@ -356,6 +358,8 @@ def genere_cluster_instances():
     for id in IDs: 
         for n in tailles: 
             for k in k_degens: 
+
+                # if n >= 1000 and k >= 25: continue # pour l'instant, on évite de générer des instances vraiment trop complexes
 
                 if k >= n-2: 
                     continue 

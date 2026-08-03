@@ -24,7 +24,7 @@ struct Gurobi_modeles {
     void modele_positions(); 
 
 
-    void modele_positions_relatives(bool lazy_cuts_on); 
+    void modele_positions_relatives(bool lazy_cuts_on, bool relaxation); 
 
 }; 
 

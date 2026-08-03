@@ -161,7 +161,7 @@ void Gurobi_modeles::modele_positions() {
 }
 
 
-void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on) {
+void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on, bool relaxation) {
 
     try {
         
@@ -178,6 +178,8 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on) {
         int nb_nodes = data.dag_size;
         int source = 0;
         int puit = nb_nodes - 1;
+
+        char vtype = relaxation ? GRB_CONTINUOUS : GRB_BINARY; // si true -> relaxation sinon non 
 
         std::vector<int> all_pos;
         for (int i = 0; i < nb_nodes - 2; ++i) {
@@ -209,7 +211,7 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on) {
         for(int i = 0; i < nb_nodes; ++i) {
             for(int j = 0; j < nb_nodes; ++j) {
                 std::string name = "z_" + std::to_string(i) + "_" + std::to_string(j); 
-                z[i][j] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, name); 
+                z[i][j] = model.addVar(0.0, 1.0, 0.0, vtype, name); 
             }
         }
 
