@@ -24,7 +24,7 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     int source = 0; 
     int puit = data.dag_size - 1; 
-    double time_limit = 1.00; 
+    double time_limit = 600.00; 
 
     Master prog(data, source, puit, time_limit, enable_LB2_elaging);
     prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
