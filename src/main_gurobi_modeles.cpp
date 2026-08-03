@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     if(algo_choice == 0)
         Gm.modele_positions(); 
     else 
-        Gm.modele_positions_relatives(lazy_cuts_on); 
+        Gm.modele_positions_relatives(lazy_cuts_on, false); 
 
     return 0; 
 }

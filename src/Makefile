@@ -2,14 +2,22 @@
 CXX = g++
 CXXFLAGS = -O3 -g -std=c++17 -Wall -Wextra
 
-# --- CONFIGURATION GUROBI 13.0.2 ---
-GUROBI_DIR = /Library/gurobi1302/macos_universal2
-GUROBI_INC = -I$(GUROBI_DIR)/include
+# --- DÉTECTION DU SYSTÈME ET DU MODULE GUROBI ---
+UNAME_S := $(shell uname -s)
 
-# On ajoute le rpath pour que l'exécutable retrouve libgurobi130.dylib à l'exécution
-GUROBI_LIB = -L$(GUROBI_DIR)/lib -lgurobi_c++ -lgurobi130 -Wl,-rpath,$(GUROBI_DIR)/lib
+ifeq ($(UNAME_S), Darwin)
+    # Configuration macOS
+    GUROBI_DIR = /Library/gurobi1302/macos_universal2
+    GUROBI_INC = -I$(GUROBI_DIR)/include
+    GUROBI_LIB = -L$(GUROBI_DIR)/lib -lgurobi_c++ -lgurobi130 -Wl,-rpath,$(GUROBI_DIR)/lib
+else
+    # Configuration Linux / Cluster LIP6
+    # GUROBI_HOME est automatiquement défini par 'module load gurobi/13.0.2'
+    GUROBI_DIR = $(GUROBI_HOME)
+    GUROBI_INC = -I$(GUROBI_DIR)/include
+    GUROBI_LIB = -L$(GUROBI_DIR)/lib -lgurobi_c++ -lgurobi130 -Wl,-rpath,$(GUROBI_DIR)/lib
+endif
 
-# Inclusions Gurobi dans les flags de compilation
 CXXFLAGS += $(GUROBI_INC)
 # --- FIN CONFIGURATION GUROBI ---
 
@@ -32,7 +40,7 @@ OBJ = $(SRC:.cpp=.o)
 # 4. Règle principale
 all: $(NAME)
 
-# Lien final : GUROBI_LIB est placé après OBJ pour que le linker résolve toutes les dépendances
+# Lien final
 $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) $(GUROBI_LIB)
 

@@ -66,8 +66,8 @@ int main(int argc, char* argv[]) {
         throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
 
     std::string file = argv[1]; 
-    int mode_execution = atoi(argv[2]); 
-    int elaging_LB2_choice = atoi(argv[3]); 
+    int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
+    int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
 
     Timer tm; 
     tm.start_timer(); 
