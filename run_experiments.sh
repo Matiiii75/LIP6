@@ -25,7 +25,7 @@ ELAGING=1
 WRITING_RESULTS=1
 
 # Nombre de cœurs à utiliser en parallèle
-NB_CORES=16
+NB_CORES=64
 
 mkdir -p "$RES_DIR"
 
