@@ -54,6 +54,7 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
         if(write_results) { // écriture dans un fichier 
 
             write_main_infos(
+                "results/results_algo.txt",
                 prog.data.instance_name,
                 prog.data.dag_size, 
                 prog.data.degenerascy, 
@@ -74,6 +75,7 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
             int nb_candidats = prog.SG.ID_to_cands.size(); // on récup la taille de SG lors de l'arrêt
 
             write_main_infos(
+                "results/results_algo.txt",
                 prog.data.instance_name, 
                 prog.data.dag_size, 
                 prog.data.degenerascy, 

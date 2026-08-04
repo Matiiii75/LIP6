@@ -100,13 +100,16 @@ std::string getFileName(const std::string& path) {
 }
 
 
-void write_main_infos(const std::string& inst, int dag_size, int degeneracy, int val_opt, double time, int nb_nodes_SG) {
-
-    std::ofstream writing("../results/results_main_algo.txt", std::ios::app); 
+void write_main_infos(
+    const std::string& path_to_write, 
+    const std::string& inst, int dag_size, 
+    int degeneracy, int val_opt, double time, 
+    int nb_nodes_SG) 
+{
+    std::ofstream writing(path_to_write, std::ios::app); 
     writing << inst << " " << dag_size << " " << degeneracy << " "; 
     writing << val_opt << " " << nb_nodes_SG << " " << time << std::endl;
     writing.close(); 
-
 }
 
 
