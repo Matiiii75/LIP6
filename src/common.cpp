@@ -113,5 +113,17 @@ void write_main_infos(
 }
 
 
-
+void write_SAA_results(
+    const std::string& path_to_write, 
+    const std::string& inst, 
+    int dag_size, int degeneracy, 
+    int val_opt, double time,
+    double temperature, int nb_iter_max)
+{
+    std::ofstream writing(path_to_write, std::ios::app); 
+    writing << inst << " " << dag_size << " " << degeneracy << " "; 
+    writing << val_opt << " " << time << " " << temperature << " ";
+    writing << nb_iter_max << std::endl;
+    writing.close(); 
+}
 

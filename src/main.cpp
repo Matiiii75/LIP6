@@ -5,13 +5,44 @@
 // éxécute SAA sur une instance donnée 
 // calcule et affiche la valeur obtenue 
 // n'écrit rien dans un fichier 
-void run_SAA(Data& data) {
+void run_SAA(Data& data, bool write_results) {
 
-    Heuristics h(data); // partie heuristique SAA
-    double ideal_temp = h.init_temp(); 
-    std::cout << "ideal temp -> " << ideal_temp << std::endl;
-    h.SAA_optimize(ideal_temp, 100000); 
-    std::cout << "Valeur trouvée -> " << h.obj_val << std::endl;
+    double initial_temp = -1; // -1 -> appeler méthode init_temp()
+    Heuristics h(data, initial_temp, 100000); // partie heuristique SAA
+    h.SAA_optimize(); // lancement de l'algo 
+
+    bool display_inst_name = true; 
+    bool display_n_and_k = true; 
+    bool display_order_found = false; 
+    bool display_best_val = true; 
+    bool display_time = true; 
+    bool display_temperature = true;  
+    bool display_nb_iter_max = true; 
+
+    h.display_results( // affichage des données voulues 
+        display_inst_name, 
+        display_n_and_k,   
+        display_order_found, 
+        display_best_val,
+        display_time,  
+        display_temperature, 
+        display_nb_iter_max
+    ); 
+
+    if(write_results) { // écriture dans un fichier si voulu
+
+        write_SAA_results(
+            "../results/results_SAA.txt",
+            h.data.instance_name, 
+            h.data.dag_size, 
+            h.data.degenerascy,
+            h.obj_val,
+            h.total_time,
+            h.initial_temp,
+            h.nb_iter_max
+        );
+
+    }
 
 }
 
@@ -125,10 +156,10 @@ int main(int argc, char* argv[]) {
             run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
             break; 
         case 1: // lancement SAA seul 
-            run_SAA(data);
+            run_SAA(data, writing_results);
             break;  
         case 2: // lancement SAA + algo complexité param
-            run_SAA(data); 
+            run_SAA(data, writing_results); 
             run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
             break; 
         default: 
@@ -137,5 +168,6 @@ int main(int argc, char* argv[]) {
 
     return 0; 
 }
+
 
 

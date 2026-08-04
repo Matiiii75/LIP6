@@ -8,9 +8,9 @@ Master::Master(const Data& _data, int _s, int _t, double _time_limit, bool _enab
 
     if(_enable_LB2_elaging_DSC) 
     {
-        Heuristics h(_data); 
-        double ideal_temp = h.init_temp(); // on détermine la température idéale 
-        h.SAA_optimize(ideal_temp, 100000); // on résoud avec recuit simulé
+        double initial_temp = -1; // on demande au constructeur de heuristic d'appele init_temp()
+        Heuristics h(_data, initial_temp, 100000); 
+        h.SAA_optimize(); // on résoud avec recuit simulé
         SAA_value = h.obj_val; // on récup la valeur calculée 
 
         std::cout << "SAA value -> " << SAA_value << std::endl; 

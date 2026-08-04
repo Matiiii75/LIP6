@@ -1,11 +1,17 @@
 #include "Heuristics.hpp"
 
 
-Heuristics::Heuristics(const Data& _data) : data(_data) 
+Heuristics::Heuristics(const Data& _data, double _initial_temp, int _nb_iter_max) : 
+    data(_data), initial_temp(_initial_temp), nb_iter_max(_nb_iter_max)
 {
+    SAA_time.start_timer(); // commencer a mesurer  
+    
     init_ordre_topo(); 
     compute_node_order_matrix();
-    obj_val = compute_DSC_obj(); 
+    obj_val = compute_DSC_obj();
+
+    if(initial_temp == -1) // signifie qu'on doit appeler init_temp()
+        initial_temp = init_temp();
 
 }
 
@@ -234,7 +240,7 @@ double Heuristics::init_temp() const
     int count = 0;
 
     for (int i = 1; i < data.dag_size - 1; ++i) // on va évaluer tous les mouvement ui <-> ui+1 de la solution
-    {
+    {   
         if (!is_move_valid(i))
             continue; // si invalide -> ignorer 
 
@@ -251,25 +257,23 @@ double Heuristics::init_temp() const
         return 1000.0; // 1000 par défaut 
 
     double meanDelta = somme_delta / count;
-
+    
     return -meanDelta / std::log(wanted_acceptance);
 }
 
 
-void Heuristics::SAA_optimize(double temp, int iter_max) {
-
-    std::cout << "Execution recuit simulé : " << std::endl; 
-    std::cout << "temp : " << temp << ", iter_max : " << iter_max; 
-    std::cout << std::endl;
+void Heuristics::SAA_optimize() {
 
     std::random_device rd; // création graine aléatoire 
     std::mt19937 gen(rd()); // moteur aléatoire 
 
     int t = data.dag_size-1; // sommet puit
 
+    double temp = this->initial_temp; 
+
     while(temp > 0.01)
     {
-        for(int i = 0; i < iter_max; ++i) {
+        for(int i = 0; i < this->nb_iter_max; ++i) {
 
             BestSwap bs; 
             int indx = random_int(1,t-2, gen); // on ignore s et t 
@@ -318,7 +322,62 @@ void Heuristics::SAA_optimize(double temp, int iter_max) {
 
         temp = temp * 0.95; 
     }
-
+    
+    this->total_time = SAA_time.get_temps_passe(); 
 }
 
 
+void Heuristics::display_results(
+    bool display_inst_name, 
+    bool display_n_and_k,   
+    bool display_order_found, 
+    bool display_best_val,
+    bool display_time,  
+    bool display_temperature, 
+    bool display_nb_iter_max)
+{
+    std::cout << "-------------------------------------------------------------------------"; 
+    std::cout << std::endl;
+
+    std::cout << "               [----- AFFICHAGES RÉSULTATS -----]" << std::endl;
+    std::cout << std::endl;
+
+    if(display_inst_name) {
+        std::cout << "[Instance]              : " << this->data.instance_name << std::endl;
+    }
+
+    if(display_n_and_k) {
+        std::cout << "[Dag size & Degeneracy] : "; 
+        std::cout << this->data.dag_size << " / "; 
+        std::cout << this->data.degenerascy << std::endl;
+    }
+
+    if(display_order_found) {
+        std::cout << "[Ordre topologique optimal] : " << std::endl;
+        for(int i : this->ordre_to_node) 
+            std::cout << i << ", "; 
+        std::cout << std::endl;
+    }
+
+    if(display_best_val) 
+        std::cout << "[valeur optimale]       : " << this->obj_val << std::endl;
+
+    if(display_time) {
+        std::cout << "[Temps total]           : "; 
+        std::cout << this->total_time << " sec" << std::endl;
+    }
+
+    if(display_temperature) {
+        std::cout << "[Temperature]           : "; 
+        std::cout << this->initial_temp << std::endl;
+    }
+
+    if(display_nb_iter_max) {
+        std::cout << "[Nb Iter Max].          : "; 
+        std::cout << this->nb_iter_max << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << "-------------------------------------------------------------------------"; 
+
+} 

@@ -2,6 +2,7 @@
 
 #include "Data.hpp"
 #include "common.hpp"
+#include "Timer.hpp"
 
 /**
  * @brief structure qui mémorise les deux indexs à swap 
@@ -23,17 +24,26 @@ struct Heuristics {
 
     const Data& data; // ref vers les datas
 
+    double initial_temp; // température choisie 
+
+    int nb_iter_max; 
+
     std::vector<int> ordre_to_node; // vecteur qui associe à chq position son noeud
 
     std::vector<int> node_to_ordre; // vecteur qui associe à chq noeud sa position 
 
     std::vector<std::vector<int>> node_order_matrix; // matrice tq m[u][i] = nb de succ directs de u STRICTEMENT apres l'ordre i 
 
+    Timer SAA_time; // pour mesurer le temps qui passe dans SAA
+    double total_time; // pour stocker le temps total qu'a requis l'algo 
+
     /**
      * @brief constructeur : trouve un ordre topologique de départ, compute l'order matrix (MP dans le pseudo-code)
      * @param _data : ce sont les données du problème stockées dans la classe Data
+     * @param _initial_temp : température initiale 
+     * @param _nb_iter_max : nombre d'itérations maximale par pallier de température 
      */
-    Heuristics(const Data& _data); 
+    Heuristics(const Data& _data, double _initial_temp, int _nb_iter_max); 
 
     /**
      * @brief trouve un ordre topologique valide initial 
@@ -109,10 +119,24 @@ struct Heuristics {
 
     /**
      * @brief lance l'optimisation du problème par le recuit simulé
-     * @param temp la température initiale
-     * @param iter_max nombre d'itérations pour chaque pallier de température 
      * @return un ordre topologique stocké en attribut de Heuristics:: et sa valeur objectif associée 
      */
-    void SAA_optimize(double temp, int iter_max); 
+    void SAA_optimize(); 
+
+
+    /**
+     * @brief affiche les données relatives au résultat. 
+     * l'ensemble des paramètres sont des booléens définissant 
+     * ce que l'on souhaite ou non afficher. 
+     */
+    void display_results(
+        bool display_inst_name, 
+        bool display_n_and_k,   
+        bool display_order_found, 
+        bool display_best_val,
+        bool display_time,  
+        bool display_temperature, 
+        bool display_nb_iter_max
+    ); 
     
 }; 

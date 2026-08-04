@@ -59,7 +59,6 @@ int random_int(int a, int b, std::mt19937& gen);
 // prend en entrée un chemin jusqu'à une instance et ressort juste le nom de l'instance 
 std::string getFileName(const std::string& path); 
 
-
 /**
  * @brief Ecrit les données obtenues par l'algo de complexité paramétrée
  * dans un fichier texte. 
@@ -72,4 +71,24 @@ std::string getFileName(const std::string& path);
  * @param nb_nodes_SG le nombre de sommets dans le graphe d'états construit 
  */
 void write_main_infos(const std::string& path_to_write, const std::string& inst, int dag_size, int degeneracy, int val_opt, double time, int nb_nodes_SG); 
+
+/**
+ * @brief Ecrit les données obtenues par le recuit simulé 
+ * dans un fichier texte. 
+ * @param path_to_write chemin vers le fichier où écrire 
+ * @param inst le nom de l'instance 
+ * @param dag_size taille du dag
+ * @param degeneracy degeneracy du graphe de co-comparabilité du dag
+ * @param val_opt la valeur optimale
+ * @param time le temps total nécéssité (calcul TC + main algo)
+ * @param temperature la température choisie 
+ * @param nb_iter_max nombre d'itérations max par pallier de température 
+ */
+void write_SAA_results(
+    const std::string& path_to_write, 
+    const std::string& inst, int dag_size, 
+    int degeneracy, int val_opt, double time, 
+    double temperature, int nb_iter_max
+); 
+
 
