@@ -32,7 +32,7 @@ void run_SAA(Data& data, bool write_results) {
     if(write_results) { // écriture dans un fichier si voulu
 
         write_SAA_results(
-            "../results/results_SAA.txt",
+            "results/results_SAA.txt",
             h.data.instance_name, 
             h.data.dag_size, 
             h.data.degenerascy,
