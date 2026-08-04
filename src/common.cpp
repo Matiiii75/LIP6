@@ -104,11 +104,13 @@ void write_main_infos(
     const std::string& path_to_write, 
     const std::string& inst, int dag_size, 
     int degeneracy, int val_opt, double time, 
-    int nb_nodes_SG) 
+    int nb_nodes_SG, int nb_elaged_nodes) 
 {
     std::ofstream writing(path_to_write, std::ios::app); 
     writing << inst << " " << dag_size << " " << degeneracy << " "; 
-    writing << val_opt << " " << nb_nodes_SG << " " << time << std::endl;
+    writing << val_opt << " " << nb_nodes_SG << " ";
+    if(nb_elaged_nodes != -1) writing << nb_elaged_nodes << " "; // affiche que si on a lancé l'élagage 
+    writing << time << std::endl;
     writing.close(); 
 }
 

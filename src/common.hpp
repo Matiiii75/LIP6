@@ -69,8 +69,17 @@ std::string getFileName(const std::string& path);
  * @param val_opt la valeur optimale
  * @param time le temps total nécéssité (calcul TC + main algo)
  * @param nb_nodes_SG le nombre de sommets dans le graphe d'états construit 
+ * @param nb_elaged_nodes dans le cas où on a activé l'élagage, compte les noeuds depuis lesquel on a eu LB > UB 
+ * @note si nb_elaged_nodes = -1, on signifie que l'élagage n'a pas été activé 
  */
-void write_main_infos(const std::string& path_to_write, const std::string& inst, int dag_size, int degeneracy, int val_opt, double time, int nb_nodes_SG); 
+void write_main_infos(
+    const std::string& path_to_write, 
+    const std::string& inst, 
+    int dag_size, int degeneracy, 
+    int val_opt, double time, 
+    int nb_nodes_SG, int nb_elaged_nodes
+); 
+
 
 /**
  * @brief Ecrit les données obtenues par le recuit simulé 

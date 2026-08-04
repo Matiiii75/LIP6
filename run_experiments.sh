@@ -20,8 +20,8 @@ RES_DIR="/home/periat/LIP6/results"
 
 # Paramètres passés à ton 'main' C++
 # Format: ./prog <instance> <mode_execution> <elaging_LB2_choice> <writing_results>
-MODE=1
-ELAGING=0
+MODE=0
+ELAGING=1
 WRITING_RESULTS=1
 
 # Nombre de cœurs à utiliser en parallèle

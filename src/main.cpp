@@ -60,6 +60,12 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
     Master prog(data, source, puit, time_limit, enable_LB2_elaging);
     prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
 
+    int nb_elaged_nodes = -1; // par défaut, on considère l'élagage désactivé 
+    std::string path_to_write = "results/results_algo.txt"; // par défaut (fichier pour élagage OFF)
+    if(enable_LB2_elaging) {
+        path_to_write = "results/results_algo_LB2_ON.txt"; 
+        nb_elaged_nodes = prog.nb_elaged_branch_by_LB2_DSC; // si on l'a activé -> on récup
+    }   
     if(prog.found_solution) {
 
         prog.extract_results();
@@ -85,15 +91,15 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
         if(write_results) { // écriture dans un fichier 
 
             write_main_infos(
-                "results/results_algo.txt",
+                path_to_write,
                 prog.data.instance_name,
                 prog.data.dag_size, 
                 prog.data.degenerascy, 
                 prog.optimal_value, 
                 prog.total_time,
-                prog.nb_candidats
+                prog.nb_candidats, 
+                nb_elaged_nodes
             );
-
         }
 
     } else {
@@ -106,13 +112,14 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
             int nb_candidats = prog.SG.ID_to_cands.size(); // on récup la taille de SG lors de l'arrêt
 
             write_main_infos(
-                "results/results_algo.txt",
+                path_to_write,
                 prog.data.instance_name, 
                 prog.data.dag_size, 
                 prog.data.degenerascy, 
                 optimal_value, 
                 prog.total_time, 
-                nb_candidats
+                nb_candidats,
+                nb_elaged_nodes
             );
 
         }
@@ -120,6 +127,54 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
     }
 
 }
+
+// arg 0 -> ./prog 
+// arg 1 -> nom de l'instance 
+// arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
+//          1 si on lance juste le SAA 
+//          2 si on lance SAA + algo complexité paramétrée 
+// arg 3 -> 0 si on active l'élagage avec la borne LB2 
+//          1 sinon
+// arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
+//          1 si on active 
+int main(int argc, char* argv[]) {
+
+    if(argc != 5) 
+        throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
+
+    std::string file = argv[1]; 
+    int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
+    int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
+    int writing_results = atoi(argv[4]); // 0 -> pas d'écritures dans le fichier results | 1 -> écritures activées 
+
+    if(mode_execution != 0 && mode_execution != 1 && mode_execution != 2) // gestions erreurs arguments 
+        throw std::runtime_error("mode_execution (main argument) doit être 0,1 ou 2"); 
+    if(elaging_LB2_choice != 0 && elaging_LB2_choice != 1)
+        throw std::runtime_error("elaging_LB2_choice (main argument) doit être 0 ou 1"); 
+    if(writing_results != 0 && writing_results != 1)
+        throw std::runtime_error("Writing results (main argument) doit être 0 ou 1"); 
+
+    Data data(file); 
+
+    switch (mode_execution) 
+    {
+        case 0: // lancement algo complexité param  
+            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
+            break; 
+        case 1: // lancement SAA seul 
+            run_SAA(data, writing_results);
+            break;  
+        case 2: // lancement SAA + algo complexité param
+            run_SAA(data, writing_results); 
+            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
+            break; 
+        default: 
+            throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
+    }
+
+    return 0; 
+}
+
 
 #include <filesystem>
 
@@ -141,84 +196,35 @@ std::vector<std::string> list_text_files(const std::string& folder_path) {
     return text_files;
 }
 
-int main()
-{
+// un simple main pour lancer le calcul de LB2 sur toutes les instances pour un cut set vide a chaque fois
+// int main()
+// {
 
-    std::vector<std::string> all_inst = list_text_files("../instances/"); 
+//     std::vector<std::string> all_inst = list_text_files("../instances/"); 
 
-    for(std::string& inst : all_inst) {
+//     for(std::string& inst : all_inst) {
 
-        Data data(inst); 
-        State_graph SG(data, 0, data.dag_size-1); 
+//         Data data(inst); 
+//         State_graph SG(data, 0, data.dag_size-1); 
         
-        int LB2 = 0; 
-        for(int i = 0; i < (int)SG.taille_blocages_hors_cut.size(); ++i) {
-            LB2 += SG.taille_blocages_hors_cut[i]; 
-        }
+//         int LB2 = 0; 
+//         for(int i = 0; i < (int)SG.taille_blocages_hors_cut.size(); ++i) {
+//             LB2 += SG.taille_blocages_hors_cut[i]; 
+//         }
 
-        std::cout << "valeur de la borne : " << LB2 << std::endl;
+//         std::cout << "valeur de la borne : " << LB2 << std::endl;
 
-        // écriture dans un fichiers text dans results/
+//         // écriture dans un fichiers text dans results/
 
-        std::string path_to_write = "../results/results_LB2_empty_set.txt"; 
-        std::ofstream writing(path_to_write, std::ios::app); 
-        writing << data.instance_name << " ";
-        writing << data.dag_size << " "; 
-        writing << data.degenerascy << " "; 
-        writing << LB2 << std::endl;
-        writing.close(); 
+//         std::string path_to_write = "../results/results_LB2_empty_set.txt"; 
+//         std::ofstream writing(path_to_write, std::ios::app); 
+//         writing << data.instance_name << " ";
+//         writing << data.dag_size << " "; 
+//         writing << data.degenerascy << " "; 
+//         writing << LB2 << std::endl;
+//         writing.close(); 
 
-    }
-
-    return 0; 
-}
-
-// arg 0 -> ./prog 
-// arg 1 -> nom de l'instance 
-// arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
-//          1 si on lance juste le SAA 
-//          2 si on lance SAA + algo complexité paramétrée 
-// arg 3 -> 0 si on active l'élagage avec la borne LB2 
-//          1 sinon
-// arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
-//          1 si on active 
-// int main(int argc, char* argv[]) {
-
-//     if(argc != 5) 
-//         throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
-
-//     std::string file = argv[1]; 
-//     int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
-//     int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
-//     int writing_results = atoi(argv[4]); // 0 -> pas d'écritures dans le fichier results | 1 -> écritures activées 
-
-//     if(mode_execution != 0 && mode_execution != 1 && mode_execution != 2) // gestions erreurs arguments 
-//         throw std::runtime_error("mode_execution (main argument) doit être 0,1 ou 2"); 
-//     if(elaging_LB2_choice != 0 && elaging_LB2_choice != 1)
-//         throw std::runtime_error("elaging_LB2_choice (main argument) doit être 0 ou 1"); 
-//     if(writing_results != 0 && writing_results != 1)
-//         throw std::runtime_error("Writing results (main argument) doit être 0 ou 1"); 
-
-//     Data data(file); 
-
-//     switch (mode_execution) 
-//     {
-//         case 0: // lancement algo complexité param  
-//             run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
-//             break; 
-//         case 1: // lancement SAA seul 
-//             run_SAA(data, writing_results);
-//             break;  
-//         case 2: // lancement SAA + algo complexité param
-//             run_SAA(data, writing_results); 
-//             run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
-//             break; 
-//         default: 
-//             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
 //     }
 
 //     return 0; 
 // }
-
-
-
