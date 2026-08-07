@@ -279,11 +279,11 @@ void Master::build_SG_DSC() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(enable_LB2_elaging_DSC && (cut_set_size > 0) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(enable_LB2_elaging_DSC && (cut_set_size >= 12) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
-            // if(iteration_count % 1000 == 0)   
-            //     std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
+            if(iteration_count % 25000 == 0)   
+                std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
             nb_elaged_branch_by_LB2_DSC++; 
             continue; 
         }

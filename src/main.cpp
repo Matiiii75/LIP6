@@ -55,7 +55,7 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     int source = 0; 
     int puit = data.dag_size - 1; 
-    double time_limit = 600.00; 
+    double time_limit = 1200.00; 
 
     Master prog(data, source, puit, time_limit, enable_LB2_elaging);
     prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
@@ -106,6 +106,24 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
 
         std::cout << "Arrêt algorithme : time_limit excedée" << std::endl;
 
+        bool display_inst_name = true; 
+        bool display_n_and_k = true; 
+        bool display_opt_order = false; 
+        bool display_time = true; 
+        bool display_opt_val = false; // il est tt simplement impossible de récup la valeur optimale JAMAIS TRUE !!!
+        bool display_hash_infos = true; 
+        bool display_LB2_elaging_infos = true;         
+
+        prog.display_results( // affichage du résultat 
+            display_inst_name,
+            display_n_and_k, 
+            display_opt_order,
+            display_time, 
+            display_opt_val,
+            display_hash_infos,
+            display_LB2_elaging_infos
+        ); 
+
         if(write_results) { // si on souhaite écrire dans un fichier 
 
             int optimal_value = -1; 
@@ -133,7 +151,7 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
 // arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
 //          1 si on lance juste le SAA 
 //          2 si on lance SAA + algo complexité paramétrée 
-// arg 3 -> 0 si on active l'élagage avec la borne LB2 
+// arg 3 -> 0 si on désactive l'élagage avec la borne LB2 
 //          1 sinon
 // arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
 //          1 si on active 

@@ -313,7 +313,7 @@ def generate_instance(
 # 6. Écriture fichier (mêmes conventions que Dag::write_in_file)
 # ---------------------------------------------------------------------------
 
-def write_instance(adj: list[list[int]], d_obtenue: int, ID: str, output_dir: str = "../instances") -> str:
+def write_instance(adj: list[list[int]], d_obtenue: int, ID: str, output_dir: str = "../") -> str:
     """
     Écrit l'instance au format :
         nb_nodes nb_arcs degenerescence
@@ -346,10 +346,8 @@ def genere_cluster_instances():
     de même paramètres avec des ID différents. 
     """
 
-    # tailles = [50,100,200,500,1000,1500,2000]
-    # k_degens = [5,10,15,20,25,30,35,40]
-    tailles = [1000,1500,2000]
-    k_degens = [25,30]
+    tailles = [50,100,200,500,1000,1500,2000]
+    k_degens = [5,10,15,20,25,30,35,40]
     IDs = [i for i in range(1,11)]
 
     max_attempts = 30
@@ -403,6 +401,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # main() # décommenter si on veut générer une seule instance (avec la commande python3 Dag_generator.py n k ID)
-    genere_cluster_instances() # décommenter si on veut générer un lot d'instance dont les paramètres sont définits dans la fonction ci-contre appelée 
+    main() # décommenter si on veut générer une seule instance (avec la commande python3 Dag_generator.py n k ID)
+    # genere_cluster_instances() # décommenter si on veut générer un lot d'instance dont les paramètres sont définits dans la fonction ci-contre appelée 
 

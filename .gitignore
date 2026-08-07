@@ -5,3 +5,4 @@ prog
 instances/
 *.swp
 results/
+Stats.ipynb
