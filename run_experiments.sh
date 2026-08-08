@@ -24,6 +24,8 @@ MODE=0
 ELAGING=1
 WRITING_RESULTS=1
 
+ELAG_PERCENT_VALUES=(0.3 0.5 0.7 0.8)
+
 # Nombre de cœurs à utiliser en parallèle
 NB_CORES=64
 
@@ -34,14 +36,20 @@ mkdir -p "$RES_DIR"
 # ==============================================================================
 run_one_instance() {
     local file="$1"
-
-    # Lancement direct et pur du binaire C++
-    # Aucune redirection de fichier ni timeout côté Bash
-    "$EXEC" "$file" "$MODE" "$ELAGING" "$WRITING_RESULTS"
+    
+    if((ELAGING == 1)); then 
+        for ELAG_CHOICE in "${ELAG_PERCENT_VALUES[@]}"; do
+            "$EXEC" "$file" "$MODE" "$ELAGING" "$WRITING_RESULTS" "$ELAG_CHOICE"
+        done    
+    else 
+        # Lancement direct et pur du binaire C++
+        # Aucune redirection de fichier ni timeout côté Bash
+        "$EXEC" "$file" "$MODE" "$ELAGING" "$WRITING_RESULTS"
+    fi
 }
 
 export -f run_one_instance
-export EXEC MODE ELAGING WRITING_RESULTS
+export EXEC MODE ELAGING WRITING_RESULTS ELAG_PERCENT_VALUES
 
 # ==============================================================================
 # EXECUTION PARALLELE
