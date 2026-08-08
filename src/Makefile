@@ -29,7 +29,6 @@ SRC = common.cpp \
       State_graph.cpp \
       Data.cpp \
       Heuristics.cpp \
-      gen_graph.cpp \
       Timer.cpp \
       gurobi_modeles.cpp \
       main.cpp
