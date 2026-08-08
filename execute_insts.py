@@ -19,10 +19,9 @@ def execute_insts():
     wanted_inst = []
 
     for inst in all_insts: # tri des instances 
-        inst_copy = inst.copy()
-        inst_copy = inst_copy.strip().split("_")
-        if inst_copy[0] not in tailles: continue 
-        if inst_copy[2] not in k: continue
+        parts = inst.strip().split("_")
+        if parts[0] not in tailles: continue 
+        if parts[2] not in k: continue
         wanted_inst.append(inst)
 
     for inst in wanted_inst: 
