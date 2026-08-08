@@ -33,7 +33,8 @@ struct Master {
  
     std::unordered_map<int,int> lower_bounds_2_DSC; // dico qui associe a chaque C_ID sa LB2 si elle existe 
     int nb_elaged_branch_by_LB2_DSC; 
-    bool enable_LB2_elaging_DSC; 
+    int size_begin_elag; // la taille des cut-sets depuis on commence l'élagage 
+    const Elaging_user_choice& user_elag_choice; // structure qui contient les choix de l'user 
     std::vector<int> best_dist_DSC; // pr stocker les pcc jusqu'à l'ID défini par l'index du vecteur
 
 
@@ -45,7 +46,7 @@ struct Master {
      * @param _data Les données du pb pré-calculées 
      * @param _s le sommet de degré entrant 0 du dag initial
      * @param _t le sommet de degré sortant 0 du dag initial
-     * @param _enable_LB2_elaging_DSC true si on active l'élagage avec LB2
+     * @param _user_elag_choice true si on active l'élagage avec LB2
      * @param _time_limit la limite de temps imposée par l'utilisateur 
      */
     Master(
@@ -53,7 +54,7 @@ struct Master {
         int _s, 
         int _t, 
         double _time_limit,
-        bool _enable_LB2_elaging_DSC
+        const Elaging_user_choice& _user_elag_choice
     );
 
     // [----- MÉTHODES COMMUNES À TOUT CRITÈRE -----]

@@ -2,7 +2,6 @@
 
 #include "Data.hpp" 
 
-
 /**
  * @brief fonction qui teste l'inclusion de v1 dans v2 - {t} (car t compte pas dans l'objectif)
  * @param v1 le vecteur qui est inclus 
@@ -70,6 +69,7 @@ std::string getFileName(const std::string& path);
  * @param time le temps total nécéssité (calcul TC + main algo)
  * @param nb_nodes_SG le nombre de sommets dans le graphe d'états construit 
  * @param nb_elaged_nodes dans le cas où on a activé l'élagage, compte les noeuds depuis lesquel on a eu LB > UB 
+ * @param size_elag_begin dans le cas où on a activé l'élagage, c'est la taille des cut-set depuis lesquels l'élagage est actif
  * @note si nb_elaged_nodes = -1, on signifie que l'élagage n'a pas été activé 
  */
 void write_main_infos(
@@ -77,7 +77,8 @@ void write_main_infos(
     const std::string& inst, 
     int dag_size, int degeneracy, 
     int val_opt, double time, 
-    int nb_nodes_SG, int nb_elaged_nodes
+    int nb_nodes_SG, int nb_elaged_nodes, 
+    double size_elag_begin
 ); 
 
 
@@ -101,3 +102,13 @@ void write_SAA_results(
 ); 
 
 
+struct Elaging_user_choice 
+{
+    bool elaging_LB2_ON;
+    double elaging_LB2_percentage; 
+    Elaging_user_choice(): elaging_LB2_ON(false), elaging_LB2_percentage(-1.0) {}
+    void set_params(bool _elaging_LB2_ON, double _elaging_LB2_percentage) {
+        elaging_LB2_ON = _elaging_LB2_ON; 
+        elaging_LB2_percentage = _elaging_LB2_percentage; 
+    }
+}; 

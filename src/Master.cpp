@@ -1,22 +1,20 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t, double _time_limit, bool _enable_LB2_elaging_DSC) : 
-    data(_data), SG(_data, _s, _t), time_limit(_time_limit), enable_LB2_elaging_DSC(_enable_LB2_elaging_DSC)
+Master::Master(const Data& _data, int _s, int _t, double _time_limit, const Elaging_user_choice& _user_elag_choice) : 
+    data(_data), SG(_data, _s, _t), time_limit(_time_limit), user_elag_choice(_user_elag_choice)
 {
     master_time_data.start_timer(); // début du timer de Master
 
-    if(_enable_LB2_elaging_DSC) 
+    if(_user_elag_choice.elaging_LB2_ON) 
     {
         double initial_temp = -1; // on demande au constructeur de heuristic d'appele init_temp()
         Heuristics h(_data, initial_temp, 100000); 
         h.SAA_optimize(); // on résoud avec recuit simulé
         SAA_value = h.obj_val; // on récup la valeur calculée 
-
-        std::cout << "SAA value -> " << SAA_value << std::endl; 
-
         set_first_cand_LB2_DSC(); // on calcule LB2 POUR S = {}
         nb_elaged_branch_by_LB2_DSC = 0; 
+        this->size_begin_elag = (int)(_data.dag_size * _user_elag_choice.elaging_LB2_percentage); 
     }
 
     L.push(0); // ajouter l'ID du premier candidat  
@@ -124,7 +122,8 @@ void Master::display_results(
         std::cout << "[nombre de candidats]   : " << this->nb_candidats << std::endl;
     }
 
-    if(display_LB2_elaging_infos && enable_LB2_elaging_DSC) {
+    if(display_LB2_elaging_infos && user_elag_choice.elaging_LB2_ON) {
+        std::cout << "[elag_from_size]        : " << this->size_begin_elag << std::endl;
         std::cout << "[nombre de sommets duquel démarre un élagage] : ";
         std::cout << this->nb_elaged_branch_by_LB2_DSC << std::endl;
     }
@@ -279,7 +278,7 @@ void Master::build_SG_DSC() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(enable_LB2_elaging_DSC && (cut_set_size >= 12) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(user_elag_choice.elaging_LB2_ON && (cut_set_size >= size_begin_elag) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
             if(iteration_count % 25000 == 0)   

@@ -50,19 +50,21 @@ void run_SAA(Data& data, bool write_results) {
 // affiche l'ordre topo optimal, la valeur associée, check la validité 
 // et affiche le nombre de sommets de SGG généré, ainsi que le nombre de hash différents 
 // n'écrit rien dans un fichier 
-void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging) {
+void run_param_comp_algo(Data& data, bool write_results, const Elaging_user_choice& elag_choice) {
 
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     int source = 0; 
     int puit = data.dag_size - 1; 
     double time_limit = 1200.00; 
 
-    Master prog(data, source, puit, time_limit, enable_LB2_elaging);
+    Master prog(data, source, puit, time_limit, elag_choice);
     prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
 
     int nb_elaged_nodes = -1; // par défaut, on considère l'élagage désactivé 
+    double size_elag_begin = elag_choice.elaging_LB2_percentage; // le constructeur l'aura mis a -1 par défaut 
+
     std::string path_to_write = "results/results_algo.txt"; // par défaut (fichier pour élagage OFF)
-    if(enable_LB2_elaging) {
+    if(elag_choice.elaging_LB2_ON) {
         path_to_write = "results/results_algo_LB2_ON.txt"; 
         nb_elaged_nodes = prog.nb_elaged_branch_by_LB2_DSC; // si on l'a activé -> on récup
     }   
@@ -98,7 +100,8 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
                 prog.optimal_value, 
                 prog.total_time,
                 prog.nb_candidats, 
-                nb_elaged_nodes
+                nb_elaged_nodes, 
+                size_elag_begin
             );
         }
 
@@ -137,7 +140,8 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
                 optimal_value, 
                 prog.total_time, 
                 nb_candidats,
-                nb_elaged_nodes
+                nb_elaged_nodes,
+                size_elag_begin
             );
 
         }
@@ -155,15 +159,29 @@ void run_param_comp_algo(Data& data, bool write_results, bool enable_LB2_elaging
 //          1 sinon
 // arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
 //          1 si on active 
+// arg 5 -> pourcentag dans [0.0,1.0]. Pas obligé de la saisir si arg 4 = 0
+// NOTE :: si arg 4 : 0, renvoie une erreur si nombre d'arguments différent de 5 
 int main(int argc, char* argv[]) {
-
-    if(argc != 5) 
-        throw std::runtime_error("Nombre d'arguments fournis en arguments incorrect"); 
 
     std::string file = argv[1]; 
     int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
     int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
     int writing_results = atoi(argv[4]); // 0 -> pas d'écritures dans le fichier results | 1 -> écritures activées 
+
+    Elaging_user_choice user_elag_choice; // création de l'objet de choix de l'user 
+
+    if(elaging_LB2_choice) { // si on a choisit d'élaguer, alors on peut set les params
+        if(argc != 6) 
+            throw std::runtime_error("main expected 6 args"); 
+        double elag_percentage_choice = atof(argv[5]); // récupérer le percentage de début d'élagage 
+        if(elag_percentage_choice < 0.0 || elag_percentage_choice > 1.0) 
+            throw std::runtime_error("Elag_percentage_choice (main argument) doit être dans [0.0,1.0]"); 
+        // on peut set les données 
+        user_elag_choice.set_params(elaging_LB2_choice, elag_percentage_choice); 
+    } else {
+        if(argc != 5) 
+            throw std::runtime_error("main expected 5 args"); 
+    }
 
     if(mode_execution != 0 && mode_execution != 1 && mode_execution != 2) // gestions erreurs arguments 
         throw std::runtime_error("mode_execution (main argument) doit être 0,1 ou 2"); 
@@ -177,14 +195,14 @@ int main(int argc, char* argv[]) {
     switch (mode_execution) 
     {
         case 0: // lancement algo complexité param  
-            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
+            run_param_comp_algo(data, writing_results, user_elag_choice); 
             break; 
         case 1: // lancement SAA seul 
             run_SAA(data, writing_results);
             break;  
         case 2: // lancement SAA + algo complexité param
             run_SAA(data, writing_results); 
-            run_param_comp_algo(data, writing_results, elaging_LB2_choice); 
+            run_param_comp_algo(data, writing_results, user_elag_choice); 
             break; 
         default: 
             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
