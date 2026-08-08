@@ -1,8 +1,16 @@
 #include "Master.hpp"
 
 
-Master::Master(const Data& _data, int _s, int _t, double _time_limit, const Elaging_user_choice& _user_elag_choice) : 
-    data(_data), SG(_data, _s, _t), time_limit(_time_limit), user_elag_choice(_user_elag_choice)
+Master::Master(
+    const Data& _data, 
+    int _s, int _t, 
+    double _time_limit, 
+    const Elaging_user_choice& _user_elag_choice) : 
+    data(_data), 
+    SG(_data, _s, _t), 
+    time_limit(_time_limit), 
+    user_elag_choice(_user_elag_choice
+    )
 {
     master_time_data.start_timer(); // début du timer de Master
 

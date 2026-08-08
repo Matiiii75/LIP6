@@ -102,6 +102,9 @@ void write_SAA_results(
 ); 
 
 
+// structure qui enregistre l'ensemble des choix utilisateurs relatifs à l'élagage, 
+// tels que si on active l'élagage LB2, ou bien la taille (en pourcentage de dag_size), 
+// des premiers cut-set depuis lesquels on commence l'élagage. 
 struct Elaging_user_choice 
 {
     bool elaging_LB2_ON;

@@ -46,7 +46,7 @@ struct Master {
      * @param _data Les données du pb pré-calculées 
      * @param _s le sommet de degré entrant 0 du dag initial
      * @param _t le sommet de degré sortant 0 du dag initial
-     * @param _user_elag_choice true si on active l'élagage avec LB2
+     * @param _user_elag_choice contient les choix de l'utilisateur liés à l'élagage 
      * @param _time_limit la limite de temps imposée par l'utilisateur 
      */
     Master(

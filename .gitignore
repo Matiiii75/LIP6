@@ -6,3 +6,4 @@ instances/
 *.swp
 results/
 Stats.ipynb
+src/__pycache__
