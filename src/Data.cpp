@@ -80,6 +80,26 @@ Data::Data(const std::string& file) {
 }
 
 
+Data::Data(const std::vector<std::vector<int>>& _dag): dag(_dag) 
+{
+    this->dag_size = (int)_dag.size(); 
+    int nb_arcs = 0; 
+    for(int i = 0; i < dag_size; ++i) 
+        nb_arcs += (int)_dag[i].size();
+    this-> nb_arcs = nb_arcs; 
+    
+    // calcul de reverse dag 
+    this->reverse_dag.resize(dag_size); 
+    for(int i = 0; i < dag_size; ++i) {
+        for(int u : _dag[i])
+            this->reverse_dag[u].push_back(i); 
+    }
+
+    compute_node_to_hash(); 
+    compute_transitive_closure(); 
+}
+
+
 void Data::compute_transitive_closure() { 
 
     std::vector<std::vector<bool>> trans_closure(dag_size, 

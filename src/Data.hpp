@@ -80,6 +80,14 @@ struct Data {
      */
     Data(const std::string& file); 
 
+    /**
+     * @brief constructeur de Data : initialise les données du problème à
+     * partir d'un dag encodé en matrice d'adjacence 
+     * @note : ON PEUT L'AMÉLIORER EN DONNANT LA TC DU DAG ORIGINALE ET LE DICTIONAIRE NEW_TO_OLD
+     * POUR NE PAS AVOIR A RECALCULER LA TC DEPUIS LE DÉBUT 
+     */
+    Data(const std::vector<std::vector<int>>& _dag); 
+
     void compute_transitive_closure(); // calcule la transitive closure (ON PEUT AMELIORER)
     void compute_node_to_hash(); // calcule les hash de chaque noeud du dag 
     

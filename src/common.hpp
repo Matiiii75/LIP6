@@ -102,16 +102,13 @@ void write_SAA_results(
 ); 
 
 
-// structure qui enregistre l'ensemble des choix utilisateurs relatifs à l'élagage, 
-// tels que si on active l'élagage LB2, ou bien la taille (en pourcentage de dag_size), 
-// des premiers cut-set depuis lesquels on commence l'élagage. 
-struct Elaging_user_choice 
-{
-    bool elaging_LB2_ON;
-    double elaging_LB2_percentage; 
-    Elaging_user_choice(): elaging_LB2_ON(false), elaging_LB2_percentage(-1.0) {}
-    void set_params(bool _elaging_LB2_ON, double _elaging_LB2_percentage) {
-        elaging_LB2_ON = _elaging_LB2_ON; 
-        elaging_LB2_percentage = _elaging_LB2_percentage; 
-    }
-}; 
+/**
+ * @brief Créer un sous-graphe induit d'un dag initial, à partir d'un ensemble d'entier
+ * qui est une composante connexe
+ * @param initial_dag c'est le dag d'origine duquel est issue la composante 
+ * @param composante la composante qui définit le sous-graphe induit 
+ * @note ajoute un noeud source = 0 & puit = new_dag.size-1
+ */
+std::vector<std::vector<int>> create_dag_from_composante(
+    const std::vector<std::vector<int>>& initial_dag, 
+    const std::vector<int>& composante); 

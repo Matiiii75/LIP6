@@ -31,6 +31,7 @@ SRC = common.cpp \
       Heuristics.cpp \
       Timer.cpp \
       gurobi_modeles.cpp \
+      User_choices.cpp \
       main.cpp
 
 # 3. Transformation des .cpp en .o

@@ -5,15 +5,15 @@ Master::Master(
     const Data& _data, 
     int _s, int _t, 
     double _time_limit, 
-    const Elaging_user_choice& _user_elag_choice) : 
+    const User_choices& _user_choices) : 
     data(_data), 
     SG(_data, _s, _t), 
     time_limit(_time_limit), 
-    user_elag_choice(_user_elag_choice)
+    user_choices(_user_choices)
 {
     master_time_data.start_timer(); // début du timer de Master
 
-    if(_user_elag_choice.elaging_LB2_ON) 
+    if(_user_choices.elaging_LB2_ON) 
     {
         double initial_temp = -1; // on demande au constructeur de heuristic d'appele init_temp()
         Heuristics h(_data, initial_temp, 100000); 
@@ -21,12 +21,53 @@ Master::Master(
         SAA_value = h.obj_val; // on récup la valeur calculée 
         set_first_cand_LB2_DSC(); // on calcule LB2 POUR S = {}
         nb_elaged_branch_by_LB2_DSC = 0; 
-        this->size_begin_elag = (int)(_data.dag_size * _user_elag_choice.elaging_LB2_percentage); 
+        this->size_begin_elag = (int)(_data.dag_size * _user_choices.elaging_LB2_percentage); 
     }
 
     L.push(0); // ajouter l'ID du premier candidat  
     best_dist_DSC.push_back(0); // le coût pour aller au premier candidat est nul 
     pred_in_pcc.push_back({-1,-1}); 
+}
+
+
+void Master::compute_composantes() {
+
+    std::vector<int> to_visit; 
+    for(int u = 1; u < SG.t; ++u) // remplir 
+        to_visit.push_back(u); 
+
+    std::vector<uint8_t> visited(data.dag_size, 0); // pour mémoriser ceux qu'on a visité 
+
+    for(int u : to_visit) { 
+        if(visited[u]) continue; 
+        
+        std::vector<int> composante; 
+        visited[u] = 1; // retenir qu'on l'a visité 
+        std::queue<int> fifo_list; 
+        fifo_list.push(u); 
+
+        while(!fifo_list.empty()) { 
+
+            int curr = fifo_list.front(); // récup le premier sommet
+            fifo_list.pop(); // le retirer 
+            composante.push_back(curr); // l'ajouter a la composante 
+
+            for(int curr_succ : data.dag[curr]) { // pr tt succ de curr
+                if(curr_succ == SG.t || visited[curr_succ]) continue; // ignorer le puit et les sommets déjà visités 
+                visited[curr_succ] = 1; // on l'a visité
+                fifo_list.push(curr_succ); // ajt a la fifo pr traiter ses voisis (qui seront dans la composante aussi du coup)
+            }
+
+            for(int curr_preds : data.reverse_dag[curr]) {
+                if(curr_preds == SG.s || visited[curr_preds]) continue; // ignorer source et sommets déjà visités 
+                visited[curr_preds] = 1; 
+                fifo_list.push(curr_preds); 
+            }
+
+        }
+        composantes.push_back(composante); // ajt a l'ensemble des composantes 
+    }
+
 }
 
 
@@ -129,7 +170,7 @@ void Master::display_results(
         std::cout << "[nombre de candidats]   : " << this->nb_candidats << std::endl;
     }
 
-    if(display_LB2_elaging_infos && user_elag_choice.elaging_LB2_ON) {
+    if(display_LB2_elaging_infos && user_choices.elaging_LB2_ON) {
         std::cout << "[elag_from_size]        : " << this->size_begin_elag << std::endl;
         std::cout << "[nombre de sommets duquel démarre un élagage] : ";
         std::cout << this->nb_elaged_branch_by_LB2_DSC << std::endl;
@@ -285,7 +326,7 @@ void Master::build_SG_DSC() {
         compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); // on calcule le cut_set associé
         
         // vérifier la borne LB2 
-        if(user_elag_choice.elaging_LB2_ON && (cut_set_size >= size_begin_elag) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
+        if(user_choices.elaging_LB2_ON && (cut_set_size >= size_begin_elag) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
             iteration_count++; 
             if(iteration_count % 25000 == 0)   
