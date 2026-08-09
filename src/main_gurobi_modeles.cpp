@@ -1,5 +1,8 @@
 #include "gurobi_modeles.hpp"
 
+// permet de lancer la résolution avec gurobi
+// on doit donner l'instance, le choix de l'algo (position ou position relatives)
+// ainsi que le choix d'activer les lazy-cuts pr position relative ou non
 int main(int argc, char* argv[]) {
 
     if(argc != 4) 
@@ -11,7 +14,7 @@ int main(int argc, char* argv[]) {
     std::string instance = argv[1]; 
     Data d(instance); 
 
-    Gurobi_modeles Gm(d, 0, 600.0); 
+    Gurobi_modeles Gm(d, lazy_cuts_on, 600.0); 
 
     if(algo_choice == 0)
         Gm.modele_positions(); 

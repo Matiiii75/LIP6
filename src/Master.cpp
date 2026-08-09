@@ -9,8 +9,7 @@ Master::Master(
     data(_data), 
     SG(_data, _s, _t), 
     time_limit(_time_limit), 
-    user_elag_choice(_user_elag_choice
-    )
+    user_elag_choice(_user_elag_choice)
 {
     master_time_data.start_timer(); // début du timer de Master
 
