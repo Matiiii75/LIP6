@@ -13,7 +13,7 @@ Master::Master(
 {
     master_time_data.start_timer(); // début du timer de Master
 
-    if(_user_choices.elaging_LB2_ON) 
+    if(_user_choices.elaging_LB2_ON) // lancer le calcul de SAA puisqu'on va utiliser l'élagage 
     {
         double initial_temp = -1; // on demande au constructeur de heuristic d'appele init_temp()
         Heuristics h(_data, initial_temp, 100000); 
@@ -22,6 +22,10 @@ Master::Master(
         set_first_cand_LB2_DSC(); // on calcule LB2 POUR S = {}
         nb_elaged_branch_by_LB2_DSC = 0; 
         this->size_begin_elag = (int)(_data.dag_size * _user_choices.elaging_LB2_percentage); 
+    }
+
+    if(_user_choices.composantes_pre_treatment_ON) { // si le pré-traitement par composantes connexes est actif 
+        compute_composantes(); // on les calcules
     }
 
 }
@@ -396,6 +400,59 @@ void Master::build_SG_DSC() {
         found_solution = true; 
 
     this->total_time = master_time_data.get_temps_passe(); // on récupère le temps total de l'algorithme. 
+}
+
+
+void Master::solve_DSC_with_pre_treatment() {
+
+    if(!user_choices.composantes_pre_treatment_ON) { // si on entre sans avoir activé le pré-traitement
+        throw std::runtime_error 
+        (
+            "Master::solve_DSC_with_pre_treatment -> Erreur, l'user n'a pas activé le pré-traitement"
+        );
+    }
+
+    int DSC_value = 0; // le total des sous probleme est la valeur pour le probleme principal
+
+    for(auto& composante : this->composantes) // pr chq composante 
+    {   
+        if((int)composante.size() == 1) continue; // un sommet seul ne participe pas à DSC
+        else if((int)composante.size() == 2) DSC_value++; // deux sommets ds un mm comp connexe, ne peuvent participer que de 1 
+        else if((int)composante.size() > 2) {
+
+            std::vector<std::vector<int>> sub_graph_induced; 
+            // on récupère le sous graphe induit par les sommets de la composante
+            sub_graph_induced = create_dag_from_composante(data.dag, composante); 
+            Data data_sub_graph_induced(sub_graph_induced); // on créer l'objet data avec 
+            
+            int sub_graph_source = 0; 
+            int sub_graph_puit = (int)sub_graph_induced.size()-1; 
+
+            User_choices sub_pb_user_choices; // on laisse les valeurs par défaut 
+            // sub_pb_user_choices.set_elaging_LB2_ON(); 
+            // sub_pb_user_choices.set_elaging_LB2_percentage(0.1); 
+            // donc pas de pré traitement (logique car ça marcherait pas)
+            // pas d'élagage 
+            
+            Master prog_sub_graph_induced
+            (
+                data_sub_graph_induced, 
+                sub_graph_source, 
+                sub_graph_puit,
+                600.0, 
+                sub_pb_user_choices
+            ); 
+
+            prog_sub_graph_induced.build_SG_DSC(); 
+            if(!prog_sub_graph_induced.found_solution) 
+                std::cout << "ON A PAS TROUVÉE DE SOLUTION PR LE SS PROBLEME" << std::endl;
+            DSC_value += prog_sub_graph_induced.best_dist_DSC.back(); // on ajoute la valeur trouvée
+
+        }
+    }
+
+    std::cout << "Valeur optimale trouvée : " << DSC_value << std::endl;
+    std::cout << "En : " << master_time_data.get_temps_passe() << std::endl;
 }
 
 

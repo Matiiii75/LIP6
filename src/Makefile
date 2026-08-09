@@ -32,7 +32,7 @@ SRC = common.cpp \
       Timer.cpp \
       gurobi_modeles.cpp \
       User_choices.cpp \
-      main.cpp
+      main_test.cpp
 
 # 3. Transformation des .cpp en .o
 OBJ = $(SRC:.cpp=.o)

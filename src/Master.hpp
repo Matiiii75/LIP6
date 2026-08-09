@@ -152,9 +152,16 @@ struct Master {
     bool try_elaging_LB2_DSC(int C_ID, const std::vector<uint8_t>& cut_set, const std::vector<int>& hors_cut_set); 
 
     /**
-     * @brief construit intégralement le graphe d'états SG pour DSC 
+     * @brief construit le graphe d'états SG pour DSC 
+     * @note Cette fonction construit SG avec élagage ou non, selon 
+     * le choix de l'utilisateur fournit en argument du constructeur de Master 
      */
     void build_SG_DSC();
+
+    /**
+     * @brief Si le pré-traitement est activé, c'est cette méthode qui est appelée pour résoudre le problème. 
+     */
+    void solve_DSC_with_pre_treatment(); 
 
     // vérifie la validité de l'ordre trouvé pour DSC
     bool checker_DSC(const std::vector<int>& ordre_topo, int val_found) const;

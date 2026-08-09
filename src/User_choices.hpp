@@ -7,10 +7,16 @@ struct User_choices {
     bool elaging_LB2_ON; 
     double elaging_LB2_percentage; 
 
+    bool composantes_pre_treatment_ON; 
+
     /**
      * @brief Constructeur. Il initialise les attributs sur des valeurs par défaut 
      */
-    User_choices() : elaging_LB2_ON(false), elaging_LB2_percentage(-1.0) {}
+    User_choices() : 
+        elaging_LB2_ON(false), 
+        elaging_LB2_percentage(-1.0),
+        composantes_pre_treatment_ON(false)
+    {}
 
     /**
      * @brief Set l'attribut 'elaging_LB2_ON' sur 'true'
@@ -22,5 +28,12 @@ struct User_choices {
      * @throw Erreur si _elaging_LB2_percentage n'est pas dans [0.0,1.0]
      */
     void set_elaging_LB2_percentage(double _elaging_LB2_percentage); 
+
+    /**
+     * @brief Set l'attribut 'composantes_pre_treatment_ON' sur true 
+     */
+    void set_composantes_pre_treatment_ON() {
+        this->composantes_pre_treatment_ON = true; 
+    }
 
 }; 
