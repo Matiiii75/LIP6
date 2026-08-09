@@ -24,9 +24,6 @@ Master::Master(
         this->size_begin_elag = (int)(_data.dag_size * _user_choices.elaging_LB2_percentage); 
     }
 
-    L.push(0); // ajouter l'ID du premier candidat  
-    best_dist_DSC.push_back(0); // le coût pour aller au premier candidat est nul 
-    pred_in_pcc.push_back({-1,-1}); 
 }
 
 
@@ -301,6 +298,10 @@ bool Master::try_elaging_LB2_DSC(int C_ID, const std::vector<uint8_t>& cut_set, 
 
 
 void Master::build_SG_DSC() {   
+
+    L.push(0); // ajouter l'ID du premier candidat  
+    best_dist_DSC.push_back(0); // le coût pour aller au premier candidat est nul 
+    pred_in_pcc.push_back({-1,-1}); 
 
     int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
     bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 

@@ -15,20 +15,12 @@ struct User_choices {
     /**
      * @brief Set l'attribut 'elaging_LB2_ON' sur 'true'
      */
-    void set_elaging_LB2_ON() {
-        this->elaging_LB2_ON = true; 
-    }
+    void set_elaging_LB2_ON(); 
 
     /**
      * @brief Set l'attribut 'elaging_LB2_percentage'. 
      * @throw Erreur si _elaging_LB2_percentage n'est pas dans [0.0,1.0]
      */
-    void set_elaging_LB2_percentage(double _elaging_LB2_percentage) {
-        if(_elaging_LB2_percentage < 0.0 || _elaging_LB2_percentage > 1.0)
-            throw std::runtime_error(
-                "User_choices::set_elaging_LB2_percentage -> violation du domaine [0.0,1.0]"
-            ); 
-        this->elaging_LB2_percentage = _elaging_LB2_percentage; 
-    }
+    void set_elaging_LB2_percentage(double _elaging_LB2_percentage); 
 
 }; 
