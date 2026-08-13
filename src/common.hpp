@@ -102,7 +102,22 @@ void write_SAA_results(
 ); 
 
 
-
+/**
+ * @brief Ecrit les données obtenues par un modele gurobi dans un fichier texte
+ * @param path_to_Write chemin vers le fichier où écrire 
+ * @param inst le nom de l'instance
+ * @param dag_size la taille du dag 
+ * @param degeneracy degen du graphe de co-comp
+ * @param modele_choice le choix de l'utilisateur (0->positions|1->positions_relatives)
+ * @param lazy_cuts le choix d'activer ou non les lazy cuts pour positions_relatives (1->actif)
+ * @param val_opt la valeur optimale trouvée par gurobi
+ * @param solve_time le temps de résolution avant la fin
+ * @param gap le gap entre LB et UB trouvée 
+ * @param best_bound la meilleure LB trouvée 
+ * @param found_solution un booléen (true->gurobi a trouvé au moins une solution
+ *  false->gurobi n'a meme pas eu le temps de trouver une solution réalisable)
+ * @note On lui donnera des valeurs par défaut (-1 souvent) pour les trucs non définits 
+ */
 void write_gurobi_results(
     const std::string& path_to_write, 
     const std::string& inst, int dag_size, 
