@@ -25,6 +25,7 @@ void Gurobi_modeles::modele_positions() {
         // destructeur) : pas besoin de new/delete, des objets locaux suffisent.
         GRBEnv env(true);
         env.set(GRB_IntParam_OutputFlag, 0); // 0 pr désactier les affichages dans le terminal
+        env.set(GRB_IntParam_Threads, 1); // FORCER GUROBI A N'UTILISER QU'UN SEUL THREAD PAR INSTANCE
         env.start();
 
         GRBModel model(env);
@@ -175,6 +176,7 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on, bool relaxati
         
         GRBEnv env(true);
         env.set(GRB_IntParam_OutputFlag, 0);
+        env.set(GRB_IntParam_Threads, 1); // FORCER GUROBI A N'UTILISER QU'UN SEUL THREAD PAR INSTANCE
         env.start();
 
         GRBModel model(env);
