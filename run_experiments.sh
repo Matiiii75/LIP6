@@ -107,10 +107,21 @@ mkdir -p "$RES_DIR"
 # 5. FONCTION DE TRAITEMENT D'UNE INSTANCE
 # ==============================================================================
 run_one_instance() {
+    
     local file="$1"
     
+    local filename=$(basename "$file") # on extrait le nom du fichier du chemin 
+
+    local n=$(echo "$filename" | cut -d'_' -f1) # on coupe le texte au premier '_' pr extraitre la taille n 
+
     if [[ "$TYPE_EXEC" == "gurobi" ]]; then
+        
         "$EXEC_GUROBI" "$file" "$GUROBI_MODELE" "$LAZY" "$WRITING_RESULTS"
+        
+        if ((n>500)); then # si n > 500
+            return 0 # ça quitte la fonction proprement (comme un continue finalement), l'instance est ignorée 
+        fi
+
     else
         if (( ELAGING == 1 && MODE == 0 )); then 
             for ELAG_CHOICE in "${ELAG_PERCENT_VALUES[@]}"; do
