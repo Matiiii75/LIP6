@@ -102,13 +102,14 @@ void write_SAA_results(
 ); 
 
 
-/**
- * @brief Créer un sous-graphe induit d'un dag initial, à partir d'un ensemble d'entier
- * qui est une composante connexe
- * @param initial_dag c'est le dag d'origine duquel est issue la composante 
- * @param composante la composante qui définit le sous-graphe induit 
- * @note ajoute un noeud source = 0 & puit = new_dag.size-1
- */
-std::vector<std::vector<int>> create_dag_from_composante(
-    const std::vector<std::vector<int>>& initial_dag, 
-    const std::vector<int>& composante); 
+
+void write_gurobi_results(
+    const std::string& path_to_write, 
+    const std::string& inst, int dag_size, 
+    int degeneracy, bool modele_choice, 
+    bool lazy_cuts, double val_opt,
+    double solve_time, double gap, 
+    double best_bound, bool found_solution
+); 
+
+

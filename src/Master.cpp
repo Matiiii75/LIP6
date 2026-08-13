@@ -1,6 +1,115 @@
 #include "Master.hpp"
 
 
+Pre_treatment::Pre_treatment(const Data& _data, int _s, int _t) :
+    data(_data), nb_composantes(0), nb_sub_problems_solved(0), total_cand_generated(0)
+{
+    this->compute_composantes(_s, _t); // lance le calcule des composantes 
+}
+
+
+void Pre_treatment::compute_composantes(int s, int t) {
+
+    std::vector<int> to_visit; 
+    for(int u = 1; u < t; ++u) // remplir 
+        to_visit.push_back(u); 
+
+    std::vector<uint8_t> visited(data.dag_size, 0); // pour mémoriser ceux qu'on a visité 
+
+    for(int u : to_visit) { 
+        if(visited[u]) continue; 
+        
+        std::vector<int> composante; 
+        visited[u] = 1; // retenir qu'on l'a visité 
+        std::queue<int> fifo_list; 
+        fifo_list.push(u); 
+
+        while(!fifo_list.empty()) { 
+
+            int curr = fifo_list.front(); // récup le premier sommet
+            fifo_list.pop(); // le retirer 
+            composante.push_back(curr); // l'ajouter a la composante 
+
+            for(int curr_succ : data.dag[curr]) { // pr tt succ de curr
+                if(curr_succ == t || visited[curr_succ]) continue; // ignorer le puit et les sommets déjà visités 
+                visited[curr_succ] = 1; // on l'a visité
+                fifo_list.push(curr_succ); // ajt a la fifo pr traiter ses voisis (qui seront dans la composante aussi du coup)
+            }
+
+            for(int curr_preds : data.reverse_dag[curr]) {
+                if(curr_preds == s || visited[curr_preds]) continue; // ignorer source et sommets déjà visités 
+                visited[curr_preds] = 1; 
+                fifo_list.push(curr_preds); 
+            }
+
+        }
+        composantes.push_back(composante); // ajt a l'ensemble des composantes 
+    }
+
+    this->nb_composantes = (int)composantes.size();
+
+}
+
+
+void Pre_treatment::add_composante_size(int size) {
+    composantes_sizes.push_back(size); 
+}
+
+
+Dag Pre_treatment::create_dag_from_composante(const std::vector<int>& composante) const {
+
+    int new_dag_size = (int)composante.size()+2; // car on ajt s & t 
+    int initial_puit = (int)this->data.dag_size-1; // puis dans le dag initial
+    int source = 0; 
+    int puit = new_dag_size-1; // puit du nv dag 
+
+    std::vector<int> new_to_old(new_dag_size); // new_to_old[i] = j -> j devient i 
+    std::unordered_map<int,int> old_to_new; // otn[i] = j -> i est devenu j 
+
+    new_to_old[source] = source; 
+    old_to_new[source] = source;    // les nv s & t sont associés à eux-même
+    new_to_old[puit] = puit;        
+    old_to_new[puit] = puit; 
+
+    int new_next_dispo = 1; // valeur du prochain nv noeud dispo
+    for(int u : composante) {
+        new_to_old[new_next_dispo] = u; 
+        old_to_new[u] = new_next_dispo; 
+        new_next_dispo++; // on passe au prochain 
+    }
+
+    // création du sous graphe 
+
+    Dag new_dag(new_dag_size);
+    std::vector<bool> has_0_pred(new_dag_size, true); // true -> degré entrant nul
+    
+    for(int u : composante) { // pr chq sommet de la composante 
+        int new_u = old_to_new.at(u); // on récup sa nv valeur
+        for(int u_neigh : this->data.dag[u]) { 
+            if(u_neigh == initial_puit) continue; 
+            int new_neigh_u = old_to_new.at(u_neigh); // nv valeur du voisin
+            has_0_pred[new_neigh_u] = false; 
+            new_dag[new_u].push_back(new_neigh_u); // ajt ds nv dag 
+        }
+    }
+
+    // connecter source et puit dans le nv dag 
+
+    for(int u = 1; u < puit; ++u) { 
+        // source 
+        if(has_0_pred[u]) // si il a 0 pred -> connecter a la source 
+            new_dag[source].push_back(u); 
+        // puit 
+        if((int)new_dag[u].size() == 0) { // si ps de succ 
+            new_dag[u].push_back(puit);   // connecter puit
+        }
+    }
+
+    return new_dag; 
+
+}
+
+
 Master::Master(
     const Data& _data, 
     int _s, int _t, 
@@ -25,50 +134,9 @@ Master::Master(
     }
 
     if(_user_choices.composantes_pre_treatment_ON) { // si le pré-traitement par composantes connexes est actif 
-        compute_composantes(); // on les calcules
+        // emplace() passe les arguments directement au constructeur de Pre_treatment 
+        pre_treatment.emplace(_data, _s, _t);  
     }
-
-}
-
-
-void Master::compute_composantes() {
-
-    std::vector<int> to_visit; 
-    for(int u = 1; u < SG.t; ++u) // remplir 
-        to_visit.push_back(u); 
-
-    std::vector<uint8_t> visited(data.dag_size, 0); // pour mémoriser ceux qu'on a visité 
-
-    for(int u : to_visit) { 
-        if(visited[u]) continue; 
-        
-        std::vector<int> composante; 
-        visited[u] = 1; // retenir qu'on l'a visité 
-        std::queue<int> fifo_list; 
-        fifo_list.push(u); 
-
-        while(!fifo_list.empty()) { 
-
-            int curr = fifo_list.front(); // récup le premier sommet
-            fifo_list.pop(); // le retirer 
-            composante.push_back(curr); // l'ajouter a la composante 
-
-            for(int curr_succ : data.dag[curr]) { // pr tt succ de curr
-                if(curr_succ == SG.t || visited[curr_succ]) continue; // ignorer le puit et les sommets déjà visités 
-                visited[curr_succ] = 1; // on l'a visité
-                fifo_list.push(curr_succ); // ajt a la fifo pr traiter ses voisis (qui seront dans la composante aussi du coup)
-            }
-
-            for(int curr_preds : data.reverse_dag[curr]) {
-                if(curr_preds == SG.s || visited[curr_preds]) continue; // ignorer source et sommets déjà visités 
-                visited[curr_preds] = 1; 
-                fifo_list.push(curr_preds); 
-            }
-
-        }
-        composantes.push_back(composante); // ajt a l'ensemble des composantes 
-    }
-
 }
 
 
@@ -121,6 +189,11 @@ void Master::extract_results() {
     this->nb_hash_generated = SG.hash_to_ID.size(); 
     this->nb_candidats = SG.ID_to_cands.size(); 
 
+}
+
+
+int Master::get_nb_cands_generated() const {
+    return SG.ID_to_cands.size(); 
 }
 
 
@@ -180,6 +253,11 @@ void Master::display_results(
     std::cout << std::endl;
     std::cout << "-------------------------------------------------------------------------"; 
 
+}
+
+
+int Master::get_DSC_optimal_value() const {
+    return this->best_dist_DSC.back(); 
 }
 
 
@@ -396,7 +474,7 @@ void Master::build_SG_DSC() {
 
     }
 
-    if(stoped_prema == false) // si on a stoppé a cause du temps -> on a pas de solution à proposer 
+    if(stoped_prema == false) // si pas d'arret prématuré -> on a trouvé une solution 
         found_solution = true; 
 
     this->total_time = master_time_data.get_temps_passe(); // on récupère le temps total de l'algorithme. 
@@ -414,45 +492,76 @@ void Master::solve_DSC_with_pre_treatment() {
 
     int DSC_value = 0; // le total des sous probleme est la valeur pour le probleme principal
 
-    for(auto& composante : this->composantes) // pr chq composante 
-    {   
-        if((int)composante.size() == 1) continue; // un sommet seul ne participe pas à DSC
-        else if((int)composante.size() == 2) DSC_value++; // deux sommets ds un mm comp connexe, ne peuvent participer que de 1 
-        else if((int)composante.size() > 2) {
+    for(auto& composante : pre_treatment->composantes) // pr chq composante 
+    {      
+        int taille_composante = (int)composante.size(); 
 
+        if(taille_composante == 1) {
+            pre_treatment->add_composante_size(1); 
+            continue; // un sommet seul ne participe pas à DSC
+        }
+        else if(taille_composante == 2) {
+            pre_treatment->add_composante_size(2);
+            DSC_value++; // deux sommets ds un mm comp connexe, ne peuvent participer que de 1 
+            continue; 
+        }
+        else if(taille_composante > 2) {
+
+            pre_treatment->add_composante_size(taille_composante); 
+            pre_treatment->nb_sub_problems_solved++; 
+            
             std::vector<std::vector<int>> sub_graph_induced; 
             // on récupère le sous graphe induit par les sommets de la composante
-            sub_graph_induced = create_dag_from_composante(data.dag, composante); 
+            sub_graph_induced = pre_treatment->create_dag_from_composante(composante);  
             Data data_sub_graph_induced(sub_graph_induced); // on créer l'objet data avec 
             
             int sub_graph_source = 0; 
             int sub_graph_puit = (int)sub_graph_induced.size()-1; 
 
             User_choices sub_pb_user_choices; // on laisse les valeurs par défaut 
+
             // sub_pb_user_choices.set_elaging_LB2_ON(); 
             // sub_pb_user_choices.set_elaging_LB2_percentage(0.1); 
             // donc pas de pré traitement (logique car ça marcherait pas)
             // pas d'élagage 
+
+            double curr_time = master_time_data.get_temps_passe(); // on récup le temps actuel
+            double temps_restant = time_limit - curr_time; 
+
+            if(temps_restant < 0.001) // si on a atteint le temps max 
+                break; // on sort de l'algo
             
-            Master prog_sub_graph_induced
+            Master prog_sub_graph_induced // construction du sous probleme 
             (
                 data_sub_graph_induced, 
                 sub_graph_source, 
                 sub_graph_puit,
-                600.0, 
+                temps_restant, // appel avec le temps restant  
                 sub_pb_user_choices
             ); 
 
-            prog_sub_graph_induced.build_SG_DSC(); 
-            if(!prog_sub_graph_induced.found_solution) 
-                std::cout << "ON A PAS TROUVÉE DE SOLUTION PR LE SS PROBLEME" << std::endl;
-            DSC_value += prog_sub_graph_induced.best_dist_DSC.back(); // on ajoute la valeur trouvée
+            prog_sub_graph_induced.build_SG_DSC(); // lancement de l'algorithme pour le sous probleme
 
+            if(prog_sub_graph_induced.found_solution) { // si on a pas arreté à cause du temps
+                DSC_value += prog_sub_graph_induced.get_DSC_optimal_value(); 
+                pre_treatment->total_cand_generated += prog_sub_graph_induced.get_nb_cands_generated(); 
+            }
+
+        } else {
+            throw std::runtime_error("Master::solve_DSC_with_pre_treatment -> composante size anormale"); 
         }
     }
 
+    std::cout << "----- AFFICHAGE PRE TRAITEMENT DATA -----" << std::endl;
+    std::cout << "Nombre de composantes connexe dans le dag : "; 
+    std::cout << pre_treatment->nb_composantes << std::endl;
     std::cout << "Valeur optimale trouvée : " << DSC_value << std::endl;
-    std::cout << "En : " << master_time_data.get_temps_passe() << std::endl;
+    std::cout << "Temps requis : " << master_time_data.get_temps_passe() << std::endl;
+    std::cout << "Nombre de sous-problèmes résolus : "; 
+    std::cout << pre_treatment->nb_sub_problems_solved << std::endl; 
+    std::cout << "Total d'ensembles candidats générés : "; 
+    std::cout << pre_treatment->total_cand_generated << std::endl;
+
 }
 
 

@@ -8,6 +8,43 @@
 #include "User_choices.hpp"
 
 
+struct Pre_treatment {
+
+    const Data& data; 
+    std::vector<std::vector<int>> composantes; // pour stocker les composantes connexes
+    int nb_composantes; // pr compter le nombre de composantes connexes
+    int nb_sub_problems_solved; // pr compter le nb de sous_probleme résolus (sous-dag de taille >=3
+    int total_cand_generated; 
+    std::vector<int> composantes_sizes; // chq fois qu'on traite une comp : on push_back sa taille ici
+
+    /**
+     * @brief Constructeur. Appelle directement 'compute_composantes'
+     */
+    Pre_treatment(const Data& _data, int s, int t); 
+
+    /**
+     * @brief calcule les composantes connexes du dag (de data)
+     * @param s la source dans le dag initial
+     * @param t le puit dans le dag initial
+     */
+    void compute_composantes(int s, int t); 
+
+    /**
+     * @brief permet d'ajouter une taille de composante à l'attribut "composantes_sizes"
+     */
+    void add_composante_size(int size); 
+
+    /**
+     * @brief Créer un sous-graphe induit d'un dag initial, 
+     * à partir d'un ensemble d'entier qui est une composante connexe
+     * @param composante la composante induisante le sous-graphe 
+     * @return Le dag induit, sous forme de matrice d'adjacence 
+     */
+    Dag create_dag_from_composante(const std::vector<int>& composante) const;
+
+}; 
+
+
 struct Master {
 
     // [----- ATTRIBUTS COMMUNS À TOUS LES CRITÈRES -----]
@@ -17,8 +54,12 @@ struct Master {
     std::queue<int> L; // liste FIFO pour stocker les ensembles candidats à traiter
     // pr stocker les preds dans le pcc 
     std::vector<std::pair<int,int>> pred_in_pcc; // pred_in_pcc[i] = {pred(i),candidat ajouté}
-    int SAA_value;
-    std::vector<std::vector<int>> composantes; // pour stocker les composantes connexes
+    int SAA_value;  
+
+    // on définit l'attribut pre_treatment 
+    // il est 'optionnel'. Il ne prend pas de place en plus
+    // et son constructeur n'est pas appelé lors de l'instanciation de Master 
+    std::optional<Pre_treatment> pre_treatment; 
 
     // ATTRIBUTS RELATIFS AUX RÉSULTATS DE L'ALGORITHME 
 
@@ -38,7 +79,6 @@ struct Master {
     int size_begin_elag; // la taille des cut-sets depuis on commence l'élagage 
     const User_choices& user_choices; // structure qui contient les choix de l'user 
     std::vector<int> best_dist_DSC; // pr stocker les pcc jusqu'à l'ID défini par l'index du vecteur
-
 
     /**
      * @brief constructeur de Master : établit une ref const vers data, 
@@ -60,13 +100,6 @@ struct Master {
     );
 
     // [----- MÉTHODES COMMUNES À TOUT CRITÈRE -----]
-
-
-    /**
-     * @brief calcule les composantes connexes du dag (de data)
-     */
-    void compute_composantes(); 
-
 
     /**
      * @brief calcule cut_set, hors_cut_set et la taille de cut_set (tous passés par référence)
@@ -92,6 +125,9 @@ struct Master {
      */
     void extract_results();  
 
+    // getter du nb de candidats générés 
+    int get_nb_cands_generated() const;
+
     /**
      * @brief Affiche les résultats calculés, tels que : 
      * - l'ordre topologique optimal
@@ -110,6 +146,11 @@ struct Master {
     ) const; 
 
     // [----- MÉTHODES PROPRES AUX CRITÈRES -----]
+
+    /**
+     * @brief Getter de la valeur optimale de DSC calculée par l'algo 
+     */
+    int get_DSC_optimal_value() const; 
 
     /**
      * @brief calcule et set la borne LB2 du sommet initial du graphe d'états pour DSC. 

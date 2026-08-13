@@ -10,6 +10,7 @@
 #include <algorithm> 
 #include <queue>
 #include <cassert>
+#include <optional>
 #include "common.hpp"
 
 using Dag = std::vector<std::vector<int>>;

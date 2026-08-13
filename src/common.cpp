@@ -134,56 +134,21 @@ void write_SAA_results(
 }
 
 
-std::vector<std::vector<int>> create_dag_from_composante(
-    const std::vector<std::vector<int>>& initial_dag, 
-    const std::vector<int>& composante)
+void write_gurobi_results(
+    const std::string& path_to_write, 
+    const std::string& inst, int dag_size, 
+    int degeneracy, bool modele_choice, 
+    bool lazy_cuts, double val_opt,
+    double solve_time, double gap, 
+    double best_bound, bool found_solution
+) 
 {
-    int new_dag_size = (int)composante.size()+2; // car on ajt s & t 
-    int initial_puit = (int)initial_dag.size()-1; // puis dans initial_dag
-    int source = 0; 
-    int puit = new_dag_size-1; // puit du nv dag 
-
-    std::vector<int> new_to_old(new_dag_size); // new_to_old[i] = j -> j devient i 
-    std::unordered_map<int,int> old_to_new; // otn[i] = j -> i est devenu j 
-
-    new_to_old[source] = source; 
-    old_to_new[source] = source;    // les nv s & t sont associés à eux-même
-    new_to_old[puit] = puit;        
-    old_to_new[puit] = puit; 
-
-    int new_next_dispo = 1; // valeur du prochain nv noeud dispo
-    for(int u : composante) {
-        new_to_old[new_next_dispo] = u; 
-        old_to_new[u] = new_next_dispo; 
-        new_next_dispo++; // on passe au prochain 
-    }
-
-    // création du sous graphe 
-
-    std::vector<std::vector<int>> new_dag(new_dag_size);
-    std::vector<bool> has_0_pred(new_dag_size, true); // true -> degré entrant nul
-    
-    for(int u : composante) { // pr chq sommet de la composante 
-        int new_u = old_to_new.at(u); // on récup sa nv valeur
-        for(int u_neigh : initial_dag[u]) { 
-            if(u_neigh == initial_puit) continue; 
-            int new_neigh_u = old_to_new.at(u_neigh); // nv valeur du voisin
-            has_0_pred[new_neigh_u] = false; 
-            new_dag[new_u].push_back(new_neigh_u); // ajt ds nv dag 
-        }
-    }
-
-    // connecter source et puit dans le nv dag 
-
-    for(int u = 1; u < puit; ++u) { 
-        // source 
-        if(has_0_pred[u]) // si il a 0 pred -> connecter a la source 
-            new_dag[source].push_back(u); 
-        // puit 
-        if((int)new_dag[u].size() == 0) { // si ps de succ 
-            new_dag[u].push_back(puit);   // connecter puit
-        }
-    }
-
-    return new_dag; 
+    std::ofstream writing(path_to_write, std::ios::app); 
+    writing << inst << " " << dag_size << " " << degeneracy << " "; 
+    writing << modele_choice << " "; 
+    writing << lazy_cuts << " " << val_opt << " "; 
+    writing << solve_time << " " << gap << " ";
+    writing << best_bound << " " << found_solution << std::endl;
+    writing.close(); 
 }
+

@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     
     int source = 0; 
     int puit = data.dag_size-1; 
-    double time_limit = 1200.0; 
+    double time_limit = 600.0; 
 
     Master prog(data, source, puit, time_limit, uc); 
     prog.solve_DSC_with_pre_treatment(); 

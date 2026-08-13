@@ -9,22 +9,35 @@ struct Gurobi_modeles {
     const Data& data; // données du probleme
     
     std::vector<int> opt_order; 
-    int opt_val; 
 
+    bool choix_user; // 0 = modele position | 1 modele positions relatives
     bool enable_lazy_cuts; 
     double time_limit; 
 
+    // [ATTRIBUTS RELATIFS AUX RÉSULTATS DE L'AGORITHME]
+
+    bool found_solution = false; // true si gurobi a trouvé au moins une solution  
+    double solve_time; 
+    double obj_val; 
+    double best_bound; 
+    double mip_gap; 
+
+    // Constructeur : lancer la résolution avec le choix de l'utilisateur. 
     Gurobi_modeles(
-        const Data& _data, 
+        const Data& _data,
+        bool _choix_user,  
         bool _enable_lazy_cuts,
         double _time_limit
     ); 
 
-
+    // éxécute le modele basé sur les positions 
     void modele_positions(); 
 
-
+    // éxécute le modele basé sur les positions relatives 
     void modele_positions_relatives(bool lazy_cuts_on, bool relaxation); 
+
+    // affiche les résultats de l'algorithme 
+    void display_infos() const;
 
 }; 
 

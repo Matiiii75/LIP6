@@ -3,9 +3,18 @@
 
 Gurobi_modeles::Gurobi_modeles(
     const Data& _data, 
+    bool _choix_user,
     bool _enable_lazy_cuts, 
     double _time_limit
-) : data(_data), enable_lazy_cuts(_enable_lazy_cuts), time_limit(_time_limit) {}
+) : data(_data), choix_user(_choix_user), enable_lazy_cuts(_enable_lazy_cuts), time_limit(_time_limit) {
+
+    if(choix_user) { // lancer position simple
+        this->modele_positions_relatives(_enable_lazy_cuts, false); // relaxation = false; 
+    } else { // lancer position relative 
+        this->modele_positions(); 
+    }
+
+}
 
 
 void Gurobi_modeles::modele_positions() {
@@ -15,7 +24,7 @@ void Gurobi_modeles::modele_positions() {
         // elle-même la libération des ressources sous-jacentes dans leur
         // destructeur) : pas besoin de new/delete, des objets locaux suffisent.
         GRBEnv env(true);
-        env.set(GRB_IntParam_OutputFlag, 1);
+        env.set(GRB_IntParam_OutputFlag, 0); // 0 pr désactier les affichages dans le terminal
         env.start();
 
         GRBModel model(env);
@@ -120,30 +129,29 @@ void Gurobi_modeles::modele_positions() {
         }
 
         // Résolution
-        std::cout << "[ - - - Optimisation avec modèle basé sur les positions - - - ]" << std::endl << std::endl;
         model.optimize();
 
         int status = model.get(GRB_IntAttr_Status);
 
         if (status == GRB_OPTIMAL || status == GRB_TIME_LIMIT) {
-            if (model.get(GRB_IntAttr_SolCount) > 0) {
-                std::cout << "\n================ RESULTATS GUROBI ================\n";
-                std::cout << "Statut : " << (status == GRB_OPTIMAL ? "OPTIMAL" : "TIME_LIMIT") << "\n";
-                std::cout << "Cout minimal : " << model.get(GRB_DoubleAttr_ObjVal) << "\n";
-                std::cout << "Best Bound : " << model.get(GRB_DoubleAttr_ObjBound) << "\n";
-                std::cout << "Temps Gurobi : " << model.get(GRB_DoubleAttr_Runtime) << " s\n\n";
 
-                std::cout << "Ordre des sommets trouve :\n";
-                for (int i : all_pos) {
-                    for (int j : all_nodes) {
-                        if (x[i][j].get(GRB_DoubleAttr_X) > 0.5) {
-                            std::cout << "Pos " << i << " : Sommet " << j << "\n";
-                        }
-                    }
-                }
-                std::cout << "==================================================\n";
+            this->solve_time = model.get(GRB_DoubleAttr_Runtime); 
+
+            if (model.get(GRB_IntAttr_SolCount) > 0) {
+
+                this->found_solution = true; 
+                this->obj_val = model.get(GRB_DoubleAttr_ObjVal);
+                this->best_bound = model.get(GRB_DoubleAttr_ObjBound);
+                this->mip_gap = model.get(GRB_DoubleAttr_MIPGap);
+
             } else {
-                std::cout << "[Gurobi] Temps limite atteint sans aucune solution trouvee.\n";
+                
+                try {
+                    this->best_bound = model.get(GRB_DoubleAttr_ObjBound); 
+                } catch (const GRBException& e) {
+                    std::cout << "best bound : non dispo, arret trop précoce"; 
+                }
+
             }
         } else if (status == GRB_INFEASIBLE) {
             std::cout << "[Gurobi] ERREUR : Le modele est infaisable.\n";
@@ -166,7 +174,7 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on, bool relaxati
     try {
         
         GRBEnv env(true);
-        env.set(GRB_IntParam_OutputFlag, 1);
+        env.set(GRB_IntParam_OutputFlag, 0);
         env.start();
 
         GRBModel model(env);
@@ -289,8 +297,11 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on, bool relaxati
                 for(int v = u+1; v < puit-1; ++v) {
                     for(int w = v+1; w < puit; ++w) {
 
-                        model.addConstr(z[u][v] + z[v][w] + z[w][u] <= 2); 
-                        model.addConstr(z[u][w] + z[w][v] + z[v][u] <= 2); 
+                        // model.addConstr(z[u][v] + z[v][w] + z[w][u] <= 2); 
+                        // model.addConstr(z[u][w] + z[w][v] + z[v][u] <= 2); 
+
+                        model.addConstr(z[u][v] + z[v][w] - 1 <= z[u][w]); 
+                        model.addConstr(z[u][w] + z[w][v] - 1 <= z[u][v]); 
 
                     }
                 }
@@ -308,21 +319,28 @@ void Gurobi_modeles::modele_positions_relatives(bool lazy_cuts_on, bool relaxati
         }
 
         // Résolution
-        std::cout << "[ - - - Optimisation avec modèle basé sur les positions - - - ]" << std::endl << std::endl;
         model.optimize();
 
         int status = model.get(GRB_IntAttr_Status);
 
         if (status == GRB_OPTIMAL || status == GRB_TIME_LIMIT) {
-            if (model.get(GRB_IntAttr_SolCount) > 0) {
-                std::cout << "\n================ RESULTATS GUROBI ================\n";
-                std::cout << "Statut : " << (status == GRB_OPTIMAL ? "OPTIMAL" : "TIME_LIMIT") << "\n";
-                std::cout << "Cout minimal : " << model.get(GRB_DoubleAttr_ObjVal) << "\n";
-                std::cout << "Best Bound : " << model.get(GRB_DoubleAttr_ObjBound) << "\n";
-                std::cout << "Temps Gurobi : " << model.get(GRB_DoubleAttr_Runtime) << " s\n\n";
+
+            this->solve_time = model.get(GRB_DoubleAttr_Runtime); 
+
+            if (model.get(GRB_IntAttr_SolCount) > 0) { // si on a trouvé au moins une solution 
+                
+                this->found_solution = true; 
+                this->obj_val = model.get(GRB_DoubleAttr_ObjVal);
+                this->best_bound = model.get(GRB_DoubleAttr_ObjBound);
+                this->mip_gap = model.get(GRB_DoubleAttr_MIPGap);
 
             } else {
-                std::cout << "[Gurobi] Temps limite atteint sans aucune solution trouvee.\n";
+                
+                try {
+                    this->best_bound = model.get(GRB_DoubleAttr_ObjBound); 
+                } catch (const GRBException& e) {
+                    std::cout << "best bound : non dispo, arret trop précoce"; 
+                }
             }
         } else if (status == GRB_INFEASIBLE) {
             std::cout << "[Gurobi] ERREUR : Le modele est infaisable.\n";
@@ -365,18 +383,12 @@ void My_callbacks::callback() {
                     for(int w = v+1; w < puit; ++w) {
 
                         double val_z_uv = getSolution(z[u][v]);
-                        handle_approx(val_z_uv); 
                         double val_z_vw = getSolution(z[v][w]); 
-                        handle_approx(val_z_vw); 
                         double val_z_wu = getSolution(z[w][u]); 
-                        handle_approx(val_z_wu); 
 
                         double val_z_uw = getSolution(z[u][w]); 
-                        handle_approx(val_z_uw); 
-                        double val_z_wv = getSolution(z[w][v]); 
-                        handle_approx(val_z_wv); 
+                        double val_z_wv = getSolution(z[w][v]);
                         double val_z_vu = getSolution(z[v][u]); 
-                        handle_approx(val_z_vu); 
 
                         // check si ça viole 
                         if(val_z_uv + val_z_vw + val_z_wu > 2.0) {
@@ -413,3 +425,29 @@ void My_callbacks::callback() {
 int My_callbacks::get_nb_cuts_added() const {
     return nb_cuts_added; 
 }
+
+
+void Gurobi_modeles::display_infos() const {
+
+    std::cout << "----- [RESULTATS GUROBI] -----" << std::endl;    
+
+    if(choix_user) {
+        std::cout << "--- [MODELE POSITIONS RELATIVES] ---" << std::endl;
+        std::cout << "--- [LAZY ACTIVÉES ?] : " << enable_lazy_cuts << std::endl;
+    } else {
+        std::cout << "--- [MODELE POSITIONS] ---" << std::endl;
+    }
+
+    if(found_solution) { // si on a trouvé une solution
+        std::cout << "--- [Solution trouvée] ---" << std::endl;
+        std::cout << "[valeur] : " << this->obj_val << std::endl;
+        std::cout << "[best bound] : " << this->best_bound << std::endl;
+        std::cout << "[Gap] : " << this->mip_gap << std::endl;
+        std::cout << "[Temps] : " << this->solve_time << std::endl;
+    } else {
+        std::cout << "--- [Aucune solution trouvée dans le temps imparti] ---" << std::endl;
+        std::cout << "[Temps] : " << this->solve_time << std::endl;
+    }
+
+}
+
