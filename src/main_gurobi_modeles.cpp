@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     std::string file_name = getFileName(instance); 
     Data d(instance); 
 
-    Gurobi_modeles Gm(d, algo_choice, lazy_cuts_on, 5.0); 
+    Gurobi_modeles Gm(d, algo_choice, lazy_cuts_on, 600.0); 
     Gm.display_infos(); // affichage des informations 
 
     if(writing_results) {
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
         }
 
         write_gurobi_results(
-            "../results/results_gurobi.txt",
+            "results/results_gurobi.txt",
             file_name, 
             d.dag_size, 
             d.degenerascy, 
