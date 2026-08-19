@@ -241,6 +241,7 @@ int State_graph::compute_LB2_from_C_DSC(
 
             int blocage_u_size = 0; // pr savoir exactement combien d'éléments bloquent u
             for(int w : hors_cut_set) { // (t n'est pas dedans)
+                if(w == t) continue; 
                 for(int v : data.dag[u]) {
                     if(v == t) continue; 
                     if(!data.TC[w][v]) continue; // si w -/-> v
@@ -249,13 +250,13 @@ int State_graph::compute_LB2_from_C_DSC(
                 }
             }
 
-            if(blocage_u_size > 0) // on retire 1 car si u a au moins un successeur hors cut set, 
-                ics_value += blocage_u_size - 1; // on l'aura compté dans partial_dsc_value 
+            ics_value += blocage_u_size; 
         }
 
     }
 
     return partial_dsc_value + hcs_value + ics_value; 
 }
+
 
 

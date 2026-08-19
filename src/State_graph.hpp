@@ -113,7 +113,7 @@ struct State_graph {
     void display_SG_detail() const; 
 
     // afficher les poids de chaque ensemble candidat
-    void display_weights() const; 
+    void display_weights() const;  
 
     // affiche les tailles des ensembles de blocages hors cut set 
     void display_tailles_blocages_hors_cut() const; 
@@ -135,6 +135,12 @@ struct State_graph {
      * @brief Calcule la borne inférieure LB2. Celle-ci sert a évaluer si continuer à étendre SG depuis 
      *   l'ensemble candidat associé au cut_set est intéressant. 
      * @param cut_set le cut_set depuis lequel on calcule LB2 
+     * @param hors_cut_set : le complémentaire du cut_set 
+     * @param partial_dsc_value c'est la distance minimale dans SG jusqu'à
+     * l'ensemble candidat associé au cut_set. Cette distance ne représente pas v(S), 
+     * mais plutôt v(S-gamma) où gamma est le dernier candidat ajouté à la coupe pour former S. 
+     * Ce n'est pas grave, car ics_value comptabilise ce coût manquant. En gros, tous les sommets u de S
+     * qui ont au moins un successeur hors S, ont un lambda(u) > 0. Leut participation y est comptée. 
      * @warning cut_set contient la source et le puit. 
      */
     int compute_LB2_from_C_DSC(

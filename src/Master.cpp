@@ -128,6 +128,7 @@ Master::Master(
         Heuristics h(_data, initial_temp, 100000); 
         h.SAA_optimize(); // on résoud avec recuit simulé
         SAA_value = h.obj_val; // on récup la valeur calculée 
+        std::cout << "SAA value : " << SAA_value << std::endl;
         set_first_cand_LB2_DSC(); // on calcule LB2 POUR S = {}
         nb_elaged_branch_by_LB2_DSC = 0; 
         this->size_begin_elag = (int)(_data.dag_size * _user_choices.elaging_LB2_percentage); 
@@ -280,7 +281,7 @@ int Master::compute_delta_LB2_DSC(int gamma, const std::vector<uint8_t>& cut_set
     std::vector<uint8_t> seen(data.dag_size, 0);
     int ics_delta = 0; 
 
-    for(int v : hors_cut_set) { 
+    for(int v : hors_cut_set) { // on va chercher les u dans S qui perdent une participatio à leur ensemble de blocage lambda(u) par mouvement du gamma
         if(v == SG.t) continue; // ignorer le puit 
         if(data.TC[gamma][v] == 0) continue; // si gamma -/-> v : ignorer 
         for(int u : data.reverse_dag[v]) { // pr tt pred direct de v 
@@ -293,7 +294,7 @@ int Master::compute_delta_LB2_DSC(int gamma, const std::vector<uint8_t>& cut_set
     // on a pas traité les u dans S qui sont pred direct de gamma (puisque v ne peut pas = gamma car gamma \in cut_set)
     // deux cas peuvent se présenter : 
     //  (1) -> ils ont d'autre succ direct hors-cut-set et gamma n'est pas sur un chemin vers eux : 
-    //        Alors, faire entrer gamma change la taille de lambda(u)
+    //        Alors, faire entrer gamma change la taille de lambda(u) (-1)
     //  (2) -> ils ont que gamma comme succ hors-cut-set : 
     //        Alors, faire entre gamma change la taille de lambda(u) de 1 à 0 et c'est déjà compté dans delta_pdscv
 
@@ -316,7 +317,7 @@ int Master::compute_delta_LB2_DSC(int gamma, const std::vector<uint8_t>& cut_set
             } 
         }
 
-        if(only_gamma_is_blocking == false) {
+        if(only_gamma_is_blocking == false) { // si un autre sommet que gamma bloquait 
             ics_delta--; // on a trouvé un autre bloquant de u 
         } 
 
@@ -341,9 +342,10 @@ int Master::compute_delta_LB2_DSC(int gamma, const std::vector<uint8_t>& cut_set
     }
     
     if(lambda_gamma > 0) // si gamma admet un ensemble de blocage de taille > 0 
-        hcs_delta += lambda_gamma - 1; // lambda gamma participe a la borne
+        ics_delta += lambda_gamma - 1; // lambda gamma participe a la borne
     // on retire 1 car si gamma a au moins un successeur hors cut_set, 
-    // alors il est compté dans SG.weight[gamma] (delta_pdscv)
+    // alors il est compté dans SG.weight[C_ID] (delta_pdscv) 
+    // où C_ID est l'ensemble candidat du cut-set où l'on vient d'ajouter gamma 
 
     return ics_delta + hcs_delta;
 } 
@@ -459,7 +461,7 @@ void Master::build_SG_DSC() {
 
             SG.add_arc_from_C1_to_C2(C_ID, C2_ID); // ajoute l'arc 
             
-            int dist_from_C = best_dist_DSC[C_ID] + SG.weights[C2_ID]; 
+            int dist_from_C = best_dist_DSC[C_ID] + SG.weights[C_ID]; 
             if(best_dist_DSC[C2_ID] > dist_from_C) { // voir si on améliore le pcc jusqu'à C2 en passant par C 
                 
                 best_dist_DSC[C2_ID] = dist_from_C; 

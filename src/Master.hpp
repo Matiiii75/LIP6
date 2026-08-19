@@ -79,6 +79,8 @@ struct Master {
     int size_begin_elag; // la taille des cut-sets depuis on commence l'élagage 
     const User_choices& user_choices; // structure qui contient les choix de l'user 
     std::vector<int> best_dist_DSC; // pr stocker les pcc jusqu'à l'ID défini par l'index du vecteur
+    // ATTENTION : best_dist_DSC[C] != v(S), car on ne compte pas le cout sg.weight(C) dedans, 
+    // donc ça représente v(S-gamma) (où gamma est le dernier candidat ajouté pour former S)
 
     /**
      * @brief constructeur de Master : établit une ref const vers data, 
@@ -127,6 +129,7 @@ struct Master {
 
     // getter du nb de candidats générés 
     int get_nb_cands_generated() const;
+    
 
     /**
      * @brief Affiche les résultats calculés, tels que : 

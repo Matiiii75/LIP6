@@ -105,6 +105,7 @@ void run_param_comp_algo(Data& data, bool write_results, const User_choices& use
             );
         }
 
+
     } else {
 
         std::cout << "Arrêt algorithme : time_limit excedée" << std::endl;
