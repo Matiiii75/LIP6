@@ -20,7 +20,7 @@ RES_DIR="/home/periat/LIP6/results"
 EXEC_CPP="/home/periat/LIP6/src/prog"
 EXEC_GUROBI="/home/periat/LIP6/src/prog_gurobi"
 
-NB_CORES=16
+NB_CORES=8
 WRITING_RESULTS=1
 ELAG_PERCENT_VALUES=(0.3 0.5 0.7 0.8)
 

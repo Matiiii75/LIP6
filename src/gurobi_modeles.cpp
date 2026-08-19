@@ -130,6 +130,7 @@ void Gurobi_modeles::modele_positions() {
         }
 
         // Résolution
+        model.set(GRB_DoubleParam_MIPGap, 0.0); // OPTIMALITÉ STRICTE, on ne s'arrete pas tant que UB != LB
         model.optimize();
 
         int status = model.get(GRB_IntAttr_Status);
