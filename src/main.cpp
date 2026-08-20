@@ -151,23 +151,68 @@ void run_param_comp_algo(Data& data, bool write_results, const User_choices& use
 
 }
 
+// permet d'execter l'algorithme avec pré-traitement 
+// si write_results = 1, il écrirat son résultat dans un fichier texte 
+void run_fpt_pre_treatment(Data& data, bool write_results) {
+
+    int source = 0; 
+    int puit = data.dag_size-1; 
+    double time_limit = 600.0; 
+
+    User_choices uc; 
+    uc.set_composantes_pre_treatment_ON(); // on active le pré-traitement 
+
+    Master prog(data, source, puit, time_limit, uc); 
+    prog.solve_DSC_with_pre_treatment(); // lancement de la résolution
+
+    // affichage des résultats : 
+
+    prog.display_results_pre_treatment(); 
+
+    // extraction des résultats : 
+
+    std::string path_to_write = "results/results_pre_treatment.txt";
+
+    if(write_results) {
+
+        write_pre_treatment_results
+        (
+            path_to_write,
+            data.instance_name, 
+            data.dag_size,
+            data.degenerascy,
+            prog.optimal_value,
+            prog.total_time,
+            prog.pre_treatment->nb_composantes,
+            prog.pre_treatment->nb_sub_problems_solved,
+            prog.nb_candidats
+        );
+
+    }
+
+}
+
 // arg 0 -> ./prog 
 // arg 1 -> nom de l'instance 
 // arg 2 -> 0 si on lance juste l'algo de complexité paramétrée, 
 //          1 si on lance juste le SAA 
-//          2 si on lance SAA + algo complexité paramétrée 
+//          2 si on lance fpt + pré-traitement 
 // arg 3 -> 0 si on désactive l'élagage avec la borne LB2 
 //          1 sinon
 // arg 4 -> 0 si on désactive l'écriture des résultats dans dossier results 
 //          1 si on active 
-// arg 5 -> pourcentag dans [0.0,1.0]. Pas obligé de la saisir si arg 4 = 0
-// NOTE :: si arg 4 : 0, renvoie une erreur si nombre d'arguments différent de 5 
+// arg 5 -> pourcentage dans [0.0,1.0]. Pas obligé de la saisir si arg 3 = 0
+// NOTE :: si arg 3 : 0, renvoie une erreur si nombre d'arguments différent de 5 
+// NOTE :: si arg 2 : 2, on ne saisit pas d'arg 5 
 int main(int argc, char* argv[]) {
 
+    // extraction des choix utilisateur
+
+    int mode_execution = atoi(argv[2]); // fpt par défaut 
+    int elaging_LB2_choice = atoi(argv[3]); // désactivé par défaut 
+    int writing_results = atoi(argv[4]); // désactivé par défaut 
+
     std::string file = argv[1]; 
-    int mode_execution = atoi(argv[2]); // 0 -> algo de complexité param | 1 -> SAA | 2 -> algo et SAA
-    int elaging_LB2_choice = atoi(argv[3]); // 0 -> sans élagage | 1 -> avec élagage 
-    int writing_results = atoi(argv[4]); // 0 -> pas d'écritures dans le fichier results | 1 -> écritures activées 
 
     User_choices user_choices; // création de l'objet de choix de l'user 
 
@@ -201,8 +246,7 @@ int main(int argc, char* argv[]) {
             run_SAA(data, writing_results);
             break;  
         case 2: // lancement SAA + algo complexité param
-            run_SAA(data, writing_results); 
-            run_param_comp_algo(data, writing_results, user_choices); 
+            run_fpt_pre_treatment(data, writing_results); 
             break; 
         default: 
             throw std::runtime_error("main: pb dans le switch -> param choisis incorrect"); 
@@ -211,56 +255,3 @@ int main(int argc, char* argv[]) {
     return 0; 
 }
 
-
-#include <filesystem>
-
-namespace fs = std::filesystem; 
-
-std::vector<std::string> list_text_files(const std::string& folder_path) {
-    std::vector<std::string> text_files;
-
-    if (!fs::exists(folder_path) || !fs::is_directory(folder_path)) {
-        return text_files;
-    }
-
-    for (const auto& entry : fs::directory_iterator(folder_path)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".txt") {
-            text_files.push_back(entry.path().string());
-        }
-    }
-
-    return text_files;
-}
-
-// un simple main pour lancer le calcul de LB2 sur toutes les instances pour un cut set vide a chaque fois
-// int main()
-// {
-
-//     std::vector<std::string> all_inst = list_text_files("../instances/"); 
-
-//     for(std::string& inst : all_inst) {
-
-//         Data data(inst); 
-//         State_graph SG(data, 0, data.dag_size-1); 
-        
-//         int LB2 = 0; 
-//         for(int i = 0; i < (int)SG.taille_blocages_hors_cut.size(); ++i) {
-//             LB2 += SG.taille_blocages_hors_cut[i]; 
-//         }
-
-//         std::cout << "valeur de la borne : " << LB2 << std::endl;
-
-//         // écriture dans un fichiers text dans results/
-
-//         std::string path_to_write = "../results/results_LB2_empty_set.txt"; 
-//         std::ofstream writing(path_to_write, std::ios::app); 
-//         writing << data.instance_name << " ";
-//         writing << data.dag_size << " "; 
-//         writing << data.degenerascy << " "; 
-//         writing << LB2 << std::endl;
-//         writing.close(); 
-
-//     }
-
-//     return 0; 
-// }

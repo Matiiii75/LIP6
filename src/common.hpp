@@ -104,7 +104,7 @@ void write_SAA_results(
 
 /**
  * @brief Ecrit les données obtenues par un modele gurobi dans un fichier texte
- * @param path_to_Write chemin vers le fichier où écrire 
+ * @param path_to_write chemin vers le fichier où écrire 
  * @param inst le nom de l'instance
  * @param dag_size la taille du dag 
  * @param degeneracy degen du graphe de co-comp
@@ -127,4 +127,26 @@ void write_gurobi_results(
     double best_bound, bool found_solution
 ); 
 
-
+/**
+ * @brief Ecrit les données obtenues avec pre-traitement activé dans un fichier texte 
+ * @param path_to_write chemin vers le fichier où écrire 
+ * @param inst le nom de l'instance 
+ * @param dag_size la taille du dag 
+ * @param degeneracy degen du graphe de co-comp
+ * @param val_opt la valeur optimale calculée
+ * @param time le temps de résolution
+ * @param nb_composantes le nombre de composantes faiblement connexe identifiées dans le dag 
+ * @param nb_sp_resolus le nombre de sous-probleme induit par les composantes que l'algo a résolu
+ * @param nb_cands nombre total cumulé de noeuds générés dans tous les sous-graphes d'états. 
+ */
+void write_pre_treatment_results(
+    const std::string& path_to_write, 
+    const std::string& inst, 
+    int dag_size, 
+    int degeneracy,  
+    int val_opt, 
+    double time, 
+    int nb_composantes, 
+    int nb_sp_resolus,
+    int nb_cands
+); 

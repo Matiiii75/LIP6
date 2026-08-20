@@ -257,6 +257,39 @@ void Master::display_results(
 }
 
 
+void Master::display_results_pre_treatment() const {
+
+    std::cout << "-------------------------------------------------------------------------"; 
+    std::cout << std::endl;
+
+    std::cout << "               [----- AFFICHAGES RÉSULTATS -----]" << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "[Instance]              : " << this->data.instance_name << std::endl;
+    
+    std::cout << "[Dag size & Degeneracy] : "; 
+    std::cout << this->data.dag_size << " / "; 
+    std::cout << this->data.degenerascy << std::endl;
+
+    std::cout << "[Temps total]           : "; 
+    std::cout << this->total_time << " sec" << std::endl;
+
+    std::cout << "[valeur optimale]       : " << this->optimal_value << std::endl;
+
+    std::cout << "[nombre de candidats]   : " << this->nb_candidats << std::endl;
+
+    std::cout << "[nombre de composantes] : " << this->pre_treatment->nb_composantes; 
+    std::cout << std::endl;
+
+    std::cout << "[graphes états générés] : " << this->pre_treatment->nb_sub_problems_solved; 
+    std::cout << std::endl; 
+
+    std::cout << std::endl;
+    std::cout << "-------------------------------------------------------------------------";
+
+}
+
+
 int Master::get_DSC_optimal_value() const {
     return this->best_dist_DSC.back(); 
 }
@@ -510,7 +543,6 @@ void Master::solve_DSC_with_pre_treatment() {
         else if(taille_composante > 2) {
 
             pre_treatment->add_composante_size(taille_composante); 
-            pre_treatment->nb_sub_problems_solved++; 
             
             std::vector<std::vector<int>> sub_graph_induced; 
             // on récupère le sous graphe induit par les sommets de la composante
@@ -547,23 +579,22 @@ void Master::solve_DSC_with_pre_treatment() {
             if(prog_sub_graph_induced.found_solution) { // si on a pas arreté à cause du temps
                 DSC_value += prog_sub_graph_induced.get_DSC_optimal_value(); 
                 pre_treatment->total_cand_generated += prog_sub_graph_induced.get_nb_cands_generated(); 
+            } else { // si on a arreté un sous-problème à cause du temps 
+                this->found_solution = false; // alors on mémorise qu'on a pas trouvé de solution
+                break; // on sort de la boucle sur les composantes 
             }
+
+            pre_treatment->nb_sub_problems_solved++; 
 
         } else {
             throw std::runtime_error("Master::solve_DSC_with_pre_treatment -> composante size anormale"); 
         }
     }
-
-    std::cout << "----- AFFICHAGE PRE TRAITEMENT DATA -----" << std::endl;
-    std::cout << "Nombre de composantes connexe dans le dag : "; 
-    std::cout << pre_treatment->nb_composantes << std::endl;
-    std::cout << "Valeur optimale trouvée : " << DSC_value << std::endl;
-    std::cout << "Temps requis : " << master_time_data.get_temps_passe() << std::endl;
-    std::cout << "Nombre de sous-problèmes résolus : "; 
-    std::cout << pre_treatment->nb_sub_problems_solved << std::endl; 
-    std::cout << "Total d'ensembles candidats générés : "; 
-    std::cout << pre_treatment->total_cand_generated << std::endl;
-
+    
+    // on récupère certaines valeurs 
+    this->optimal_value = DSC_value; // au pire, si on a résolu aucun pb, elle vaudra 0
+    this->nb_candidats = pre_treatment->total_cand_generated; 
+    this->total_time = master_time_data.get_temps_passe(); 
 }
 
 

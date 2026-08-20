@@ -1,15 +1,36 @@
 #!/bin/bash
 
 # ==============================================================================
-# 1. CONFIGURATION EN DUR (Modifiable directement si pas d'argument)
+# UTILISATION DU SCRIPT
 # ==============================================================================
-# Modes disponibles : 
-#   - "fpt"             : CP sans élagage
-#   - "fpt_elag"        : CP avec élagage
-#   - "saa"             : Recuit simulé
-#   - "gurobi_pos"      : Modèle Gurobi Positions simples
-#   - "gurobi_rel"      : Modèle Gurobi Positions relatives sans lazy cuts
-#   - "gurobi_rel_lazy" : Modèle Gurobi Positions relatives AVEC lazy cuts
+# Ce script permet de lancer les benchmarks en parallèle sur un dossier d'instances.
+# Il peut être exécuté localement ou soumis sur un noeud de calcul via OAR.
+#
+# SYNTAXE :
+#   ./nom_du_script.sh [MODE]
+#
+# ARGUMENT (Optionnel) :
+#   Si aucun argument n'est fourni, le mode par défaut (fpt_elag) sera utilisé.
+#
+# MODES DISPONIBLES :
+#   fpt               : Algorithme FPT exact en C++ sans élagage
+#   fpt_elag          : Algorithme FPT exact en C++ avec élagage (DÉFAUT)
+#   fpt_pre_treatment : Algorithme FPT exact en C++ avec pré-traitement 
+#   saa               : Métaheuristique (Recuit simulé)
+#   gurobi_pos        : Solveur Gurobi - Modèle PLNE sur les positions absolues
+#   gurobi_rel        : Solveur Gurobi - Modèle PLNE sur les positions relatives (statique)
+#   gurobi_rel_lazy   : Solveur Gurobi - Modèle PLNE sur les positions relatives avec Lazy Constraint
+#
+# EXEMPLES D'EXÉCUTION :
+#   1. Lancement local avec le mode par défaut (fpt_elag) :
+#      ./nom_du_script.sh
+#
+#   2. Lancement local avec le modèle Gurobi et Lazy Constraints :
+#      ./nom_du_script.sh gurobi_rel_lazy
+#
+#   3. Soumission sur le cluster (OAR) en demandant 8 coeurs :
+#      oarsub -l /nodes=1/core=8 -S "./nom_du_script.sh gurobi_rel_lazy"
+# ==============================================================================
 
 # Mode par défaut si aucun argument n'est passé à oarsub
 MODE_CIBLE="${1:-fpt_elag}"
@@ -44,6 +65,11 @@ case "$MODE_CIBLE" in
         MODE=0
         ELAGING=1
         ;;
+    fpt_pre_treatment)
+        TYPE_EXEC="prog"
+        MODE=2
+        ELAGING=0
+        ;;
     saa)
         TYPE_EXEC="prog"
         MODE=1
@@ -66,7 +92,7 @@ case "$MODE_CIBLE" in
         ;;
     *)
         echo "Erreur : Mode '$MODE_CIBLE' inconnu."
-        echo "Modes valides : fpt | fpt_elag | saa | gurobi_pos | gurobi_rel | gurobi_rel_lazy"
+        echo "Modes valides : fpt | fpt_elag | fpt_pre_treatment | saa | gurobi_pos | gurobi_rel | gurobi_rel_lazy"
         exit 1
         ;;
 esac
@@ -82,8 +108,8 @@ echo "- Node / Host        : $(hostname)"
 echo "- Mode selectionne   : $MODE_CIBLE"
 echo "- Executable utilise : $TYPE_EXEC"
 if [[ "$TYPE_EXEC" == "prog" ]]; then
-    echo "- Mode (0=CP, 1=SAA) : $MODE"
-    echo "- Elagage            : $ELAGING"
+    echo "- Mode (0=CP, 1=SAA, 2=FPT+Pre-trait) : $MODE"
+    echo "- Elagage                           : $ELAGING"
 else
     echo "- Modele PL          : $GUROBI_MODELE"
     echo "- Lazy cuts          : $LAZY"

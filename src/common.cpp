@@ -152,3 +152,25 @@ void write_gurobi_results(
     writing.close(); 
 }
 
+
+void write_pre_treatment_results(
+    const std::string& path_to_write, 
+    const std::string& inst, 
+    int dag_size, 
+    int degeneracy, 
+    int val_opt, 
+    double time, 
+    int nb_composantes, 
+    int nb_sp_resolus,
+    int nb_cands
+)
+{
+    std::ofstream writing(path_to_write, std::ios::app); 
+    writing << inst << " " << dag_size << " " << degeneracy << " "; 
+    writing << val_opt << " " << time << " " << nb_composantes << " "; 
+    writing << nb_sp_resolus << " " << nb_cands << std::endl;
+    writing.close(); 
+}
+
+
+

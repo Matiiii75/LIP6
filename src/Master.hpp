@@ -148,6 +148,11 @@ struct Master {
         bool display_LB2_elaging_infos
     ) const; 
 
+    /**
+     * @brief affiche les résultats relatifs au pré-traitement 
+     */
+    void display_results_pre_treatment() const;
+
     // [----- MÉTHODES PROPRES AUX CRITÈRES -----]
 
     /**
