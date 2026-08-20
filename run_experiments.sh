@@ -41,7 +41,7 @@ RES_DIR="/home/periat/LIP6/results"
 EXEC_CPP="/home/periat/LIP6/src/prog"
 EXEC_GUROBI="/home/periat/LIP6/src/prog_gurobi"
 
-NB_CORES=8
+NB_CORES=16
 WRITING_RESULTS=1
 ELAG_PERCENT_VALUES=(0.3 0.5 0.7 0.8)
 
@@ -153,7 +153,10 @@ run_one_instance() {
             for ELAG_CHOICE in "${ELAG_PERCENT_VALUES[@]}"; do
                 "$EXEC_CPP" "$file" "$MODE" "$ELAGING" "$WRITING_RESULTS" "$ELAG_CHOICE"
             done    
-        else # EXECUTION SAA OU BIEN ALGO FPT SANS ELAGAGE 
+        else # EXECUTION SAA OU BIEN ALGO FPT SANS ELAGAGE OU FPT AVC PRETREATMENT
+            if ((n>50)); then # si n > 50
+                return 0 # ça quitte la fonction proprement (comme un continue finalement), l'instance est ignorée 
+            fi
             "$EXEC_CPP" "$file" "$MODE" "$ELAGING" "$WRITING_RESULTS"
         fi
     fi
