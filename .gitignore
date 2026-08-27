@@ -9,3 +9,5 @@ Stats.ipynb
 src/__pycache__
 inst_test.txt
 graphiques/
+run_experiments.sh
+.vscode/
