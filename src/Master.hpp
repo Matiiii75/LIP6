@@ -38,10 +38,26 @@ struct Pre_treatment {
      * @brief Créer un sous-graphe induit d'un dag initial, 
      * à partir d'un ensemble d'entier qui est une composante connexe
      * @param composante la composante induisante le sous-graphe 
-     * @return Le dag induit, sous forme de matrice d'adjacence 
+     * @return Une paire contenant : le dag induit, sous forme de matrice d'adjacence, 
+     *  ainsi qu'un vecteur mappant les nouveaux ID de sommets aux anciens 
      */
-    Dag create_dag_from_composante(const std::vector<int>& composante) const;
+    std::pair<Dag, std::vector<int>> create_dag_from_composante(const std::vector<int>& composante) const;
 
+    /**
+     * @brief Reconstruit l'ordre topologique avec les index originaux 
+     * d'après la table de mapping 
+     * @param ordre l'ordre topologique déterminé par la résolution d'un sous-problème 
+     * @param mapping mapping[i] = j -> i était j dans le graphe original  
+     * @return l'ordre topologique du ss-pb d'après le mapping 
+     */
+    std::vector<int> re_index_subpb_order(const std::vector<int>& ordre, const std::vector<int>& mapping) const; 
+
+    /**
+     * @brief Construit l'ordre topologique optimal global a partir de tous les 
+     * sous-ordres topologiques optimaux des sous-problèmes. 
+     * @param all_sub_opt_orders contient tous les ordres optimaux des sous-problèmes résolus
+     */
+    std::vector<int> get_final_opt_order(const std::vector<std::vector<int>>& all_sub_opt_orders) const; 
 }; 
 
 
@@ -79,8 +95,10 @@ struct Master {
     int size_begin_elag; // la taille des cut-sets depuis on commence l'élagage 
     const User_choices& user_choices; // structure qui contient les choix de l'user 
     std::vector<int> best_dist_DSC; // pr stocker les pcc jusqu'à l'ID défini par l'index du vecteur
-    // ATTENTION : best_dist_DSC[C] != v(S), car on ne compte pas le cout sg.weight(C) dedans, 
+    // ATTENTION : best_dist_DSC[C] != v(S), car on ne compte pas le coût sg.weight(C) dedans, 
     // donc ça représente v(S-gamma) (où gamma est le dernier candidat ajouté pour former S)
+
+    std::vector<int> best_dist_CW; // pr stocker la valeur du min-max chemin jusque l'id défini par l'index du vec 
 
     /**
      * @brief constructeur de Master : établit une ref const vers data, 
@@ -212,8 +230,18 @@ struct Master {
      */
     void solve_DSC_with_pre_treatment(); 
 
-    // vérifie la validité de l'ordre trouvé pour DSC
+    /**
+     * @brief Checker pour DSC : vérifie la validité de l'ordre proposé en
+     * s'assurant que l'ordre trouvé est bien valide, et en re-calculant sa valeur
+     * afin de la comparer avec la valeur trouvée 
+     * @param ordre_topo ordre topologique dont on vérifie la validité 
+     * @param val_found la valeur de l'ordre 
+     */
     bool checker_DSC(const std::vector<int>& ordre_topo, int val_found) const;
+
+
+    void build_SG_CW(); 
+
 };  
 
 

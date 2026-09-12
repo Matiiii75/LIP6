@@ -1,6 +1,6 @@
 # 1. Variables de configuration
 CXX = g++
-CXXFLAGS = -O3 -g -std=c++17 -Wall -Wextra
+CXXFLAGS = -O3 -g -std=c++17 -Wall -Wextra -fsanitize=address
 
 # --- DÉTECTION DU SYSTÈME ET DU MODULE GUROBI ---
 UNAME_S := $(shell uname -s)

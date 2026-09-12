@@ -149,6 +149,18 @@ struct State_graph {
         int partial_dsc_value
     ) const; 
 
+
+    /**
+     * @brief calcule le poids des arcs sortant de l'ensemble candidats C 
+     *  par récurrence avec le poids d'un prédécesseur K pour le critère CW 
+     * @param C_ID ID de l'ensemble candidat dont on calcule le poids des arcs sortant
+     * @param K_ID un prédécesseur de C_ID
+     * @param c le candidat de K qu'on a ajouté à S(C)
+     * @param cut_set c'est le cut set associé à C (noté S(C) dans mon rapport)
+     * @return le poids 
+     */
+    int compute_weight_C_CW(int C_ID, int K_ID, int c) const; 
+
 }; 
 
 

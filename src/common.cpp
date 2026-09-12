@@ -138,7 +138,7 @@ void write_gurobi_results(
     const std::string& path_to_write, 
     const std::string& inst, int dag_size, 
     int degeneracy, bool modele_choice, 
-    bool lazy_cuts, double val_opt,
+    double val_opt,
     double solve_time, double gap, 
     double best_bound, bool found_solution
 ) 
@@ -146,7 +146,7 @@ void write_gurobi_results(
     std::ofstream writing(path_to_write, std::ios::app); 
     writing << inst << " " << dag_size << " " << degeneracy << " "; 
     writing << modele_choice << " "; 
-    writing << lazy_cuts << " " << val_opt << " "; 
+    writing << val_opt << " "; 
     writing << solve_time << " " << gap << " ";
     writing << best_bound << " " << found_solution << std::endl;
     writing.close(); 

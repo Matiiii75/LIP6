@@ -56,7 +56,7 @@ void Pre_treatment::add_composante_size(int size) {
 }
 
 
-Dag Pre_treatment::create_dag_from_composante(const std::vector<int>& composante) const {
+std::pair<Dag, std::vector<int>> Pre_treatment::create_dag_from_composante(const std::vector<int>& composante) const {
 
     int new_dag_size = (int)composante.size()+2; // car on ajt s & t 
     int initial_puit = (int)this->data.dag_size-1; // puis dans le dag initial
@@ -105,8 +105,35 @@ Dag Pre_treatment::create_dag_from_composante(const std::vector<int>& composante
         }
     }
 
-    return new_dag; 
+    return {new_dag, new_to_old};  
 
+}
+
+
+std::vector<int> Pre_treatment::re_index_subpb_order(const std::vector<int>& ordre, const std::vector<int>& mapping) const {
+
+    std::vector<int> original_order; 
+    for(int i = 0; i < (int)ordre.size(); ++i) { 
+        int curr = ordre[i]; // récup noeud actuel 
+        int old_label = mapping[curr]; // récup son label dans le dag initial 
+        original_order.push_back(old_label); // on l'ajoute dans le mm ordre 
+    }
+
+    return original_order; 
+}
+
+
+std::vector<int> Pre_treatment::get_final_opt_order(const std::vector<std::vector<int>>& all_sub_opt_orders) const {
+
+    std::vector<int> final_opt_order; 
+
+    for(const auto& sub_sol : all_sub_opt_orders) { // ajt les sommets dans leur ordre d'aparition 
+        for(int i : sub_sol) {
+            final_opt_order.push_back(i); 
+        }
+    }
+
+    return final_opt_order; 
 }
 
 
@@ -426,6 +453,8 @@ void Master::build_SG_DSC() {
     while(!L.empty()) 
     {  
 
+        iteration_count++; 
+
         if(iteration_count % 10000 == 0) { // VERIFICATION < TIME_LIMIT 
             double temps_courant = master_time_data.get_temps_passe(); 
             if(temps_courant >= time_limit) {
@@ -446,7 +475,6 @@ void Master::build_SG_DSC() {
         // vérifier la borne LB2 
         if(user_choices.elaging_LB2_ON && (cut_set_size >= size_begin_elag) && try_elaging_LB2_DSC(C_ID, cut_set, hors_cut_set)) // true -> élagage 
         { 
-            iteration_count++; 
             if(iteration_count % 25000 == 0)   
                 std::cout << "elagage d'un noeud taille " << cut_set_size << std::endl;
             nb_elaged_branch_by_LB2_DSC++; 
@@ -525,39 +553,52 @@ void Master::solve_DSC_with_pre_treatment() {
         );
     }
 
+    this->found_solution = true; // on le met a vrai par défaut 
+
     int DSC_value = 0; // le total des sous probleme est la valeur pour le probleme principal
+    std::vector<std::vector<int>> all_sub_solutions; // contiendra toutes les sol opt des ss-problemes 
 
     for(auto& composante : pre_treatment->composantes) // pr chq composante 
     {      
         int taille_composante = (int)composante.size(); 
 
         if(taille_composante == 1) {
+            
+            // on ajoute la composante directe car elle définit elle-même un sous-ordre opt 
+            all_sub_solutions.push_back({composante[0]}); 
             pre_treatment->add_composante_size(1); 
             continue; // un sommet seul ne participe pas à DSC
+
         }
         else if(taille_composante == 2) {
+
+            int u = composante[0]; // on va devoir déterminer si u -> v ou l'inverse 
+            int v = composante[1];
+            
+            // Si u précède v dans le graphe (via adjacence directe ou fermeture transitive)
+            if(data.TC[u][v] || std::find(data.dag[u].begin(), data.dag[u].end(), v) != data.dag[u].end()) {
+                all_sub_solutions.push_back({u, v});
+            } else {
+                all_sub_solutions.push_back({v, u});
+            }
+
             pre_treatment->add_composante_size(2);
             DSC_value++; // deux sommets ds un mm comp connexe, ne peuvent participer que de 1 
-            continue; 
+            continue;  
+
         }
         else if(taille_composante > 2) {
 
             pre_treatment->add_composante_size(taille_composante); 
             
-            std::vector<std::vector<int>> sub_graph_induced; 
-            // on récupère le sous graphe induit par les sommets de la composante
-            sub_graph_induced = pre_treatment->create_dag_from_composante(composante);  
+            auto [sub_graph_induced, mapping] = pre_treatment->create_dag_from_composante(composante); 
+
             Data data_sub_graph_induced(sub_graph_induced); // on créer l'objet data avec 
             
             int sub_graph_source = 0; 
             int sub_graph_puit = (int)sub_graph_induced.size()-1; 
 
             User_choices sub_pb_user_choices; // on laisse les valeurs par défaut 
-
-            // sub_pb_user_choices.set_elaging_LB2_ON(); 
-            // sub_pb_user_choices.set_elaging_LB2_percentage(0.1); 
-            // donc pas de pré traitement (logique car ça marcherait pas)
-            // pas d'élagage 
 
             double curr_time = master_time_data.get_temps_passe(); // on récup le temps actuel
             double temps_restant = time_limit - curr_time; 
@@ -577,11 +618,18 @@ void Master::solve_DSC_with_pre_treatment() {
             prog_sub_graph_induced.build_SG_DSC(); // lancement de l'algorithme pour le sous probleme
 
             if(prog_sub_graph_induced.found_solution) { // si on a pas arreté à cause du temps
+
                 DSC_value += prog_sub_graph_induced.get_DSC_optimal_value(); 
                 pre_treatment->total_cand_generated += prog_sub_graph_induced.get_nb_cands_generated(); 
+                std::vector<int> sub_opt_order = prog_sub_graph_induced.rebuild_opt_order(); // récup la solution du ss-pb
+                std::vector<int> re_index_order = pre_treatment->re_index_subpb_order(sub_opt_order, mapping); // récup les sommets originaux 
+                all_sub_solutions.push_back(re_index_order);
+
             } else { // si on a arreté un sous-problème à cause du temps 
+
                 this->found_solution = false; // alors on mémorise qu'on a pas trouvé de solution
                 break; // on sort de la boucle sur les composantes 
+
             }
 
             pre_treatment->nb_sub_problems_solved++; 
@@ -590,11 +638,20 @@ void Master::solve_DSC_with_pre_treatment() {
             throw std::runtime_error("Master::solve_DSC_with_pre_treatment -> composante size anormale"); 
         }
     }
-    
+
     // on récupère certaines valeurs 
     this->optimal_value = DSC_value; // au pire, si on a résolu aucun pb, elle vaudra 0
     this->nb_candidats = pre_treatment->total_cand_generated; 
     this->total_time = master_time_data.get_temps_passe(); 
+
+    if(found_solution) // récupérer l'ordre global en choisissant la permutation des sous-ordres établie par l'ajout défaut 
+        this->optimal_order = pre_treatment->get_final_opt_order(all_sub_solutions);
+
+    if(checker_DSC(this->optimal_order, this->optimal_value)) // checker
+        std::cout << "CHECKER OK !" << std::endl;
+    else 
+        throw std::runtime_error("Le checker a detecté une erreur !!"); 
+    
 }
 
 
@@ -655,5 +712,92 @@ bool Master::checker_DSC(const std::vector<int>& ordre_topo, int val_found) cons
     } 
     
     return true; 
+}
+
+
+void Master::build_SG_CW() {
+
+    L.push(0); // ajouter l'ID du premier candidat  
+    best_dist_CW.push_back(0); // le coût pour aller au premier candidat est nul 
+    pred_in_pcc.push_back({-1,-1});
+
+    int iteration_count = 0; // compte les iter pr savoir quand vérifier le temps 
+    bool stoped_prema = false; // permet de savoir si on a stoppé l'algo prématurémment 
+
+    while(!L.empty()) 
+    {
+
+        iteration_count++;
+
+        if(iteration_count % 10000 == 0) { // VERIFICATION < TIME_LIMIT 
+            double temps_courant = master_time_data.get_temps_passe(); 
+            if(temps_courant >= time_limit) {
+                stoped_prema = true; 
+                break; 
+            }
+        }
+
+        int C_ID = L.front(); 
+        L.pop(); 
+
+        std::vector<int> C = SG.get_cand(C_ID); 
+        int cut_set_size = 0; 
+        std::vector<uint8_t> cut_set(data.dag_size, 1); 
+        std::vector<int> hors_cut_set; 
+        compute_cut_set(C, cut_set_size, cut_set, hors_cut_set); 
+
+        std::vector<int> C2; 
+        C2.reserve(C.size()-1); 
+
+        for(int i = 0; i < (int)C.size(); ++i) {
+
+            C2 = C; 
+            C2[i] = C2.back(); 
+            C2.pop_back(); 
+
+            int curr_c = C[i]; // copie c 
+            cut_set[curr_c] = 1; // c rentre dans cutset
+
+            for(const int u : data.dag[curr_c]) { // quels succs de c peuvent rentrer en coupe ? 
+                if(is_included(data.reverse_dag[u], cut_set, -1))
+                    C2.push_back(u); // -1 -> on regarde la simple inclusion 
+            }
+
+            increase_sort_vector(C2); 
+            if(C2.size() == 0) continue; 
+
+            keyHash C2_hash = compute_cand_hash(C2, data.node_to_hash); 
+            int C2_ID = SG.is_cand_in_SG(C2, C2_hash);
+
+            if(C2_ID == -1) {
+
+                SG.add_cand_to_SG(C2, C2_hash); 
+                C2_ID = (int)SG.ID_to_cands.size()-1; 
+                L.push(C2_ID); 
+                int C2_weight = SG.compute_weight_C_CW(C2_ID, C_ID, curr_c); 
+                SG.set_weight(C2_ID, C2_weight); 
+                best_dist_CW.push_back(std::numeric_limits<int>::max());
+                pred_in_pcc.push_back({-1,-1}); 
+
+            }
+
+            SG.add_arc_from_C1_to_C2(C_ID, C2_ID); 
+
+            int dist_from_C = std::max(best_dist_CW[C_ID], SG.weights[C_ID]); 
+            if(dist_from_C < best_dist_CW[C2_ID]) { 
+                
+                best_dist_CW[C2_ID] = dist_from_C; 
+                pred_in_pcc[C2_ID] = {C_ID, curr_c}; 
+
+            }
+
+            cut_set[curr_c] = 0; // retire du cut-set, go next candidat
+        }
+    }
+
+    if(stoped_prema == false)
+        found_solution = true; 
+
+    this->total_time = master_time_data.get_temps_passe(); 
 }
 

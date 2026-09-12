@@ -9,6 +9,7 @@
 #include <fstream> 
 #include <algorithm> 
 #include <queue>
+#include <map> 
 #include <cassert>
 #include <optional>
 #include "common.hpp"

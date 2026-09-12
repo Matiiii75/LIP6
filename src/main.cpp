@@ -55,7 +55,7 @@ void run_param_comp_algo(Data& data, bool write_results, const User_choices& use
     // la source c'est 0, le puit c'est le dernier sommet du dag (par défaut)
     int source = 0; 
     int puit = data.dag_size - 1; 
-    double time_limit = 1200.00; 
+    double time_limit = 600.00; 
 
     Master prog(data, source, puit, time_limit, user_choices);
     prog.build_SG_DSC(); // lancement de la construction de l'algorithme 
@@ -67,7 +67,8 @@ void run_param_comp_algo(Data& data, bool write_results, const User_choices& use
     if(user_choices.elaging_LB2_ON) {
         path_to_write = "results/results_algo_LB2_ON.txt"; 
         nb_elaged_nodes = prog.nb_elaged_branch_by_LB2_DSC; // si on l'a activé -> on récup
-    }   
+    }  
+
     if(prog.found_solution) {
 
         prog.extract_results();

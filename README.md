@@ -71,7 +71,6 @@ Cela génère deux binaires : `prog` (pour l'algorithme FPT et SAA) et `prog_gur
 
 **Modèle Gurobi (`prog_gurobi`) :**
 
-    ./prog_gurobi <chemin_instance.txt> <choix_modele> <lazy_cuts> <sauvegarder_resultats>
+    ./prog_gurobi <chemin_instance.txt> <choix_modele> <sauvegarder_resultats>
 
-*   `<choix_modele>` : `0` (Positions absolues), `1` (Positions relatives).
-*   `<lazy_cuts>` : `0` (Désactivé), `1` (Activé pour le modèle 1).
+*   `<choix_modele>` : `0` (Positions absolues DSC), `1` (Positions relatives DSC), `2` (Position membership CW)

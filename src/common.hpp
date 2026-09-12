@@ -109,7 +109,6 @@ void write_SAA_results(
  * @param dag_size la taille du dag 
  * @param degeneracy degen du graphe de co-comp
  * @param modele_choice le choix de l'utilisateur (0->positions|1->positions_relatives)
- * @param lazy_cuts le choix d'activer ou non les lazy cuts pour positions_relatives (1->actif)
  * @param val_opt la valeur optimale trouvée par gurobi
  * @param solve_time le temps de résolution avant la fin
  * @param gap le gap entre LB et UB trouvée 
@@ -122,7 +121,7 @@ void write_gurobi_results(
     const std::string& path_to_write, 
     const std::string& inst, int dag_size, 
     int degeneracy, bool modele_choice, 
-    bool lazy_cuts, double val_opt,
+    double val_opt,
     double solve_time, double gap, 
     double best_bound, bool found_solution
 ); 

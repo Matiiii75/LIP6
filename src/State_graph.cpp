@@ -202,10 +202,6 @@ int State_graph::compute_weight_C_DSC(int C_ID, int K_ID, int c, const std::vect
     assert(C_ID >= 0 && C_ID < (int)ID_to_cands.size()); // précautions anti dépassement 
     assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
 
-    // on fait des alias sur les deux ensembles candidats 
-    // const std::vector<int>& K = ID_to_cands[K_ID]; 
-    // const std::vector<int>& C = ID_to_cands[C_ID]; 
-
     int C_weight = K_weight; // (l.3 - algo 2)
 
     for(int u : data.reverse_dag[c]) { // pr tout pred de c
@@ -258,5 +254,27 @@ int State_graph::compute_LB2_from_C_DSC(
     return partial_dsc_value + hcs_value + ics_value; 
 }
 
+
+int State_graph::compute_weight_C_CW(int C_ID, int K_ID, int c) const {
+     
+    int K_weight = weights.at(K_ID); 
+
+    assert(C_ID >= 0 && C_ID < (int)ID_to_cands.size()); // précautions anti dépassement 
+    assert(K_ID >= 0 && K_ID < (int)ID_to_cands.size()); 
+
+    int C_weight = K_weight; 
+
+    if (c == t || c == s) { // sécurité : si c = t, on aura un pb 
+        return 0; 
+    }
+
+    if(data.reverse_dag[c][0] != s) // si c n'a pas que s en prédécesseur 
+        C_weight -= (int)data.reverse_dag[c].size(); // les preds de c perdent une participation
+    
+    if(data.dag[c][0] != t) // si c n'a pas que t en successeur 
+        C_weight += (int)data.dag[c].size(); // c participe autant qu'il a de successeurs 
+
+    return C_weight; 
+}
 
 
